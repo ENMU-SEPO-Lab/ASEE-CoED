@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="cleaned_pmd_config"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+    <description>PMD configuration focused on documentation, naming conventions, and code formatting.</description>
+
+    <!-- Documentation Checks -->
+    <rule ref="category/java/documentation.xml/CommentRequired"/>
+    <rule ref="category/java/documentation.xml/CommentSize" />
+    <!-- <rule ref="category/java/documentation.xml/JavaDocVariable"/>
+    <rule ref="category/java/documentation.xml/JavaDocMethod"/>
+    <rule ref="category/java/documentation.xml/JavaDocStyle"/> -->
+    
+    <!-- Naming Conventions -->
+    <rule ref="category/java/codestyle.xml/ClassNamingConventions">
+        <priority>1</priority>
+    </rule>
+    <rule ref="category/java/codestyle.xml/FieldNamingConventions">
+        <priority>1</priority>
+    </rule>
+    <rule ref="category/java/codestyle.xml/LongVariable">
+        <priority>4</priority>
+    </rule>
+    <rule ref="category/java/codestyle.xml/ShortClassName">
+        <priority>2</priority>
+    </rule>
+    <rule ref="category/java/codestyle.xml/ShortMethodName">
+        <priority>2</priority>
+    </rule>
+    <rule ref="category/java/codestyle.xml/ShortVariable">
+        <priority>2</priority>
+    </rule>
+    <!-- <rule ref="category/java/codestyle.xml/FormalParameterNamingConventions"/>
+    <rule ref="category/java/codestyle.xml/LocalVariableNamingConventions"/>
+    <rule ref="category/java/codestyle.xml/MethodNamingConventions"/> -->
+    
+    <!-- Formatting and Readability -->
+    <rule ref="category/java/codestyle.xml/ControlStatementBraces"/>
+    <rule ref="category/java/codestyle.xml/FieldDeclarationsShouldBeAtStartOfClass">
+        <priority>5</priority>
+    </rule>
+    <!-- <rule ref="category/java/codestyle.xml/Indentation"/> -->
+    <rule ref="category/java/codestyle.xml/UselessParentheses">
+        <priority>4</priority>
+    </rule>
+    <rule ref="category/java/codestyle.xml/UnnecessaryImport">
+        <priority>4</priority>
+    </rule>
+    <rule ref="category/java/codestyle.xml/UnnecessaryReturn">
+        <priority>4</priority>
+    </rule>
+
+    <!-- Others -->
+    <rule ref="category/java/bestpractices.xml/AvoidReassigningLoopVariables">
+        <priority>4</priority>
+    </rule>
+    <rule ref="category/java/bestpractices.xml/AvoidReassigningParameters">
+        <priority>4</priority>
+    </rule>
+    <rule ref="category/java/bestpractices.xml/ForLoopVariableCount">
+        <priority>4</priority>
+    </rule>
+    <rule ref="category/java/bestpractices.xml/UnusedAssignment">
+        <priority>3</priority>
+    </rule>
+    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter">
+        <priority>3</priority>
+    </rule>
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable">
+        <priority>4</priority>
+    </rule>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateField">
+        <priority>4</priority>
+    </rule>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod">
+        <priority>4</priority>
+    </rule>
+    <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingMethodName">
+        <priority>2</priority>
+    </rule>
+    <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingTypeName">
+        <priority>2</priority>
+    </rule>
+    <rule ref="category/java/codestyle.xml/UnnecessarySemicolon">
+        <priority>5</priority>
+    </rule>
+</ruleset>

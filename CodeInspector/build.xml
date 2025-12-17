@@ -1,0 +1,116 @@
+<project name="CodInspect" basedir="." default="rebuild">
+    
+    <!-- Properties -->
+    <property name="src.dir" location="Upload_here"/>
+    <property name="config.dir" location="config"/>
+    <property name="build.dir" location="build"/>
+    <property name="reports.dir" location="${build.dir}/test-reports"/>
+    <property name="lib.dir" location="lib"/>
+    <property name="test.dir" location="test"/>
+    <property name="junit.jar" location="${lib.dir}/junit-4.13.2.jar"/>
+    <property name="hamcrest.jar" location="${lib.dir}/hamcrest-2.2.jar"/>
+    <property name="main.class" value="src.Match" />
+    <property name="Java.version" value ="17"/>
+
+    <!-- Path Setup -->
+    <path id="classpath">
+        <pathelement location="${build.dir}"/>
+        <pathelement location="${src.dir}"/>
+        <pathelement location="${config.dir}"/>
+        <pathelement location="${test.dir}"/>
+        <fileset dir="${lib.dir}" includes="*.jar"/>
+        <fileset dir="${lib.dir}">
+            <include name="*.jar"/>
+            <exclude name="/rulesets" />
+        </fileset>
+    </path>
+    
+    <target name="checkstyle"
+            description="Generates a report of code convention violations.">
+        <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties"
+                classpath="${lib.dir}/checkstyle-10.20.1-all.jar"/>
+        <!-- See https://checkstyle.org/anttask.html
+             for full options of using checkstyle with ant-->
+        <checkstyle config="${config.dir}/sun_checks.xml" 
+                    failureProperty="checkstyle.failure" 
+                    failOnViolation="false">
+            <formatter type="xml" tofile="${reports.dir}/checkstyle-result.xml"/>
+            <fileset dir="${src.dir}" includes="**/*.java"/>
+        </checkstyle>
+    </target>
+
+    <target name="pmd">
+        <echo message="PMD Starting-----" />
+        <taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask" classpathref="classpath">
+            <classpath>
+                <fileset dir="${lib.dir}/pmd-bin-7.7.0/lib">
+                    <include name="*.jar"/>
+                </fileset>
+            </classpath>
+        </taskdef>
+        <!-- <taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask" classpathref="pmd.lib"/> -->
+        <pmd>
+            <ruleset>${config.dir}/rulesets.xml</ruleset>
+            <formatter type="xml" toFile="${reports.dir}/pmd.xml"/>
+            <fileset dir="${src.dir}">
+                <include name="**/*.java"/>
+            </fileset>    
+        </pmd>
+    </target>
+
+    <target name="clean">
+        <!-- Delete the classes directory -->
+        <delete dir="${build.dir}" />
+    </target>
+
+    <target name="init" depends="clean">
+        <!-- Create the classes directory if it doesn't exist -->
+        <mkdir dir="${build.dir}" />
+        <mkdir dir="${reports.dir}" />
+    </target>
+
+    <!-- Compile Java classes -->
+    <target name="compile" depends="init">
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${src.dir}:${test.dir}" destdir="${build.dir}" includeantruntime="false">
+            <classpath refid="classpath"/>
+        </javac>
+    </target>
+
+    <!-- Run JUnit tests -->
+    <target name="test" depends="compile">
+        <junit printsummary="yes" haltonfailure="false" fork="yes">
+            <formatter type="xml"/>
+            <classpath>
+                <path refid="classpath"/>
+                <pathelement location="${junit.jar}"/>
+                <pathelement location="${hamcrest.jar}"/>
+                <!-- <pathelement location="${test.build.dir}"/>
+                <fileset dir="${build.dir}/test" includes="*.class"/> -->
+            </classpath>
+
+            <formatter type="plain"/>
+
+            <!-- <test name="TestCases" haltonfailure="no" outfile="result">
+                <formatter type="xml"/>
+            </test> -->
+
+            <batchtest fork="yes" todir="${reports.dir}">
+                <fileset dir="${test.dir}">
+                    <include name="**/*Test*.java"/>
+                    <exclude name="**/*AbstractTest.java"/>
+                </fileset>
+            </batchtest>
+        </junit>
+        <!-- <junitreport todir="${reports.dir}">
+            <fileset dir="${reports.dir}">
+                <include name="TEST-*.xml"/>
+            </fileset>
+        </junitreport>
+        <record name="${reports.dir}/test-output.txt" action="stop"/> -->
+    </target>
+
+    <target name="rebuild" depends="clean, init, checkstyle, pmd, compile, test" />
+
+    </project>
+
