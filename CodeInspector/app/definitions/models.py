@@ -11,16 +11,16 @@ class CheckstyleViolation:
 @dataclass
 class PmdViolation:
     file: str
-    beginline: int
-    endline: int
-    begincolumn: int
-    endcolumn: int
+    begin_line: int
+    end_line: int
+    begin_column: int
+    end_column: int
     rule: str
     ruleset: str
-    class_name: str
     priority: int
     message: str
-    externalInfoUrl: str
+    class_name: str | None = None
+    external_info_url: str | None = None
     method: str | None = None
     variable: str | None = None
 
@@ -31,18 +31,18 @@ class TestFailureDetails:
     
 @dataclass
 class UnitTestingSummary:
-    testsRun: str
+    tests_ran: str
     failures: str
     errors: str
     skipped: str
-    timeElapsed: str
+    time_elapsed: str
  
 @dataclass 
 class UnitTestCase:
     name: str
     time: str
     status: str
-    failureDetails: TestFailureDetails
+    failure_details: TestFailureDetails | None = None
     
 @dataclass 
 class UnitTestingResults:
@@ -59,10 +59,75 @@ class CombinedParsedViolations:
 @dataclass
 class ViolationReport:
     system: str
-    studentName: str
-    checkDate: str
-    linesOfCode: int
+    student_name: str
+    check_date: str
+    lines_of_code: int
     violations: CombinedParsedViolations
 
 @dataclass
-class 
+class ErrorsWithinCategoryStats:
+    category_stats: dict[str, int]
+    
+    def get_most_common_error_category_and_count(self) -> tuple[str, int]:
+        return max(
+            self.category_stats.items(), 
+            key=lambda x: x[1], 
+            default=("None", 0)
+        )
+    
+    def total_errors(self) -> int:
+        return sum(self.category_stats.values())
+    
+@dataclass
+class ErrorsWithinSeverityStats:
+    severity_stats: dict[str, ErrorsWithinCategoryStats]
+    
+    def total_errors(self) -> int:
+        return sum(
+            stats.total_errors()
+            for stats in self.severity_stats.values()
+        )
+        
+    def get_most_common_severity(self) -> tuple[str, int]:
+        if not self.severity_stats:
+            return ("None", 0)
+
+        return max(
+            (
+                (severity, stats.total_errors())
+                for severity, stats in self.severity_stats.items()
+            ),
+            key=lambda severity_and_count: severity_and_count[1]
+        )    
+    
+@dataclass
+class ErrorsWithinFileStats:
+    file_stats: dict[str, ErrorsWithinSeverityStats]
+    
+    def total_errors(self) -> int:
+        return sum(
+            stats.total_errors()
+            for stats in self.file_stats.values()
+        )
+
+    def get_file_with_most_errors(self) -> tuple[str, int]:
+        if not self.file_stats:
+            return ("None", 0)
+
+        return max(
+            (
+                (file, stats.total_errors())
+                for file, stats in self.file_stats.items()
+            ),
+            key=lambda file_and_count: file_and_count[1]
+        )    
+
+@dataclass
+class ErrorsWithinSubmissionStats:
+    submission_stats: dict[str, ErrorsWithinFileStats]
+    
+    def total_errors(self) -> int:
+        return sum(
+            stats.total_errors()
+            for stats in self.submission_stats.values()
+        )
