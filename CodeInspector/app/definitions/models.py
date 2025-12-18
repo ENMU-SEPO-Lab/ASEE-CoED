@@ -26,8 +26,8 @@ class PmdViolation:
 
 @dataclass
 class TestFailureDetails:
-    message: str
-    stackTrace: list[str]
+    message: str = None
+    stackTrace: list[str] = None
     
 @dataclass
 class UnitTestingSummary:
@@ -39,9 +39,9 @@ class UnitTestingSummary:
  
 @dataclass 
 class UnitTestCase:
-    name: str
-    time: str
-    status: str
+    name: str = None
+    time: str = None
+    status: str = None  
     failure_details: TestFailureDetails | None = None
     
 @dataclass 

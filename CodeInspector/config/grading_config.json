@@ -1,0 +1,36 @@
+{
+    "weights": {
+        "checkstyle": {
+            "info": 0.01,
+            "warning": 0.02,
+            "error": 0.05
+        },
+        "pmd": {
+            "1": 0.05,
+            "2": 0.04,
+            "3": 0.03,
+            "4": 0.02,
+            "5": 0.01
+        }
+    },
+    "criteria_ratings": {
+        "requirements": {
+            "excellent": 60,
+            "good": 48,
+            "satisfactory": 36,
+            "unsatisfactory": 10
+        },
+        "coding_standards": {
+            "excellent": 10,
+            "good": 8,
+            "satisfactory": 6,
+            "unsatisfactory": 2
+        },
+        "runtime": {
+            "excellent": 20,
+            "good": 16,
+            "satisfactory": 12,
+            "unsatisfactory": 8
+        }
+    }
+}
