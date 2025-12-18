@@ -1,72 +1,67 @@
-from CodeInspector.app.definitions.models import UnitTestCase, UnitTestingResults, UnitTestingSummary
+from CodeInspector.app.definitions.models import (
+    UnitTestCase, 
+    UnitTestingResults, 
+    UnitTestingSummary, 
+    TestFailureDetails
+)
 
-def parse_test_results(junit_txt: str):
+def parse_test_results(junit_txt: str) -> UnitTestingResults:
     try:
 
-        # Initialize structure
-        result = {
-            "testSuite": "",
-            "summary": {
-                "testsRun": 0,
-                "failures": 0,
-                "errors": 0,
-                "skipped": 0,
-                "timeElapsed": ""
-            },
-            "testCases": []
-        }
-
-        current_test_case = UnitTestCase()
+        current_test_case: UnitTestCase | None = None
+        summary = UnitTestingSummary()
+        result = UnitTestingResults(summary = summary, testcases = [], test_suite = "")
 
         # Parse the file line by line
         for line in junit_txt.splitlines():
+            
             line = line.strip()
-            print("Test-Line: ", line)
+            
             if line.startswith("Testsuite:"):
-                result["testSuite"] = line.split(":")[1].strip()
+                result.test_suite = line.split(":")[1].strip()
+                
             elif line.startswith("Tests run:"):
                 parts = line.split(", ")
-                result["summary"]["testsRun"] = int(parts[0].split(":")[1].strip())
-                result["summary"]["failures"] = int(parts[1].split(":")[1].strip())
-                result["summary"]["errors"] = int(parts[2].split(":")[1].strip())
-                result["summary"]["skipped"] = int(parts[3].split(":")[1].strip())
-                result["summary"]["timeElapsed"] = parts[4].split(":")[1].strip()
+                summary.tests_ran = int(parts[0].split(":")[1].strip())
+                summary.failures = int(parts[1].split(":")[1].strip())
+                summary.errors = int(parts[2].split(":")[1].strip())
+                summary.skipped = int(parts[3].split(":")[1].strip())
+                summary.time_elapsed = parts[4].split(":")[1].strip()
             elif line.startswith("Testcase:"):
-                if current_test_case:
-                    result["testCases"].append(current_test_case)
+                
+                if current_test_case is not None:
+                    result.testcases.append(current_test_case)
+                    
                 parts = line.split(" took ")
                 test_case_name = parts[0].split(":")[1].strip()
                 time_taken = parts[1].strip()
-                current_test_case = {
-                    "name": test_case_name,
-                    "time": time_taken,
-                    "status": "PASSED"
-                }
-            elif line.startswith("FAILED"):
-                if current_test_case:
-                    current_test_case["status"] = "FAILED"
-                    current_test_case["failureDetails"] = {}
-            elif line.startswith("Caused an ERROR"): # define behavior for "Caused an ERROR" case
-                if current_test_case:
-                    current_test_case["status"] = "ERROR"
-                    current_test_case["failureDetails"] = {}
-            elif line.startswith("expected:") and current_test_case:
-                message = line.strip()
-                current_test_case["failureDetails"]["message"] = message
-            elif line.startswith("at ") and current_test_case:
-                # initialize failureDetails value as as empty dict to prevent None type
-                if "failureDetails" not in current_test_case: 
-                    current_test_case["failureDetails"] = {}
-                if "stackTrace" not in current_test_case["failureDetails"]:
-                    current_test_case["failureDetails"]["stackTrace"] = []
-                current_test_case["failureDetails"]["stackTrace"].append(line.strip())
+                
+                current_test_case = UnitTestCase(
+                    name = test_case_name,
+                    time = time_taken,
+                    status = "PASSED" 
+                )
+                
+            elif line.startswith("FAILED") and current_test_case:
+                current_test_case.status = "FAILED"
+                current_test_case.failure_details = TestFailureDetails()
+                
+            elif line.startswith("Caused an ERROR") and current_test_case: # define behavior for "Caused an ERROR" case
+                current_test_case.status = "ERROR"
+                current_test_case.failure_details = TestFailureDetails()
+                
+            elif line.startswith("expected:") and current_test_case.failure_details:
+                current_test_case.failure_details.message = line
+                
+            elif line.startswith("at ") and current_test_case.failure_details:
+                current_test_case.failure_details.stack_trace.append(line)
 
         # Add the last test case if exists
         if current_test_case:
-            result["testCases"].append(current_test_case)
+            result.testcases.append(current_test_case)
 
         return result
  
     except Exception as e:
         print(f"Failed to parse test results: {e}")
-        return {}
+        raise ValueError("Invalid JUnit test output") from e

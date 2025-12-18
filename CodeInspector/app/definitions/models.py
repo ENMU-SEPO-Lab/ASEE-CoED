@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @dataclass
 class CheckstyleViolation:
@@ -26,16 +26,16 @@ class PmdViolation:
 
 @dataclass
 class TestFailureDetails:
-    message: str = None
-    stackTrace: list[str] = None
+    message: str = ""
+    stack_trace: list[str] = field(default_factory=list)
     
 @dataclass
 class UnitTestingSummary:
-    tests_ran: str
-    failures: str
-    errors: str
-    skipped: str
-    time_elapsed: str
+    tests_ran: int = 0
+    failures: int = 0 
+    errors: int = 0
+    skipped: int = 0
+    time_elapsed: str = ""
  
 @dataclass 
 class UnitTestCase:
@@ -46,9 +46,9 @@ class UnitTestCase:
     
 @dataclass 
 class UnitTestingResults:
-    testSuite: str
     summary: UnitTestingSummary
     testcases: list[UnitTestCase]
+    test_suite: str = ""
     
 @dataclass
 class CombinedParsedViolations:
