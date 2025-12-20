@@ -1,4 +1,4 @@
-from CodeInspector.app.definitions.models import PmdViolation
+from CodeInspector.app.infrastructure.models import PmdViolation
 import xml.etree.ElementTree as ET
 
 def _to_int(value_to_convert: str | None) -> int | None:

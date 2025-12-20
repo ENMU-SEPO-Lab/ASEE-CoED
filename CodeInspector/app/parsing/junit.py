@@ -1,4 +1,4 @@
-from CodeInspector.app.definitions.models import (
+from CodeInspector.app.infrastructure.models import (
     UnitTestCase, 
     UnitTestingResults, 
     UnitTestingSummary, 

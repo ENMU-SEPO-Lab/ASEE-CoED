@@ -1,4 +1,4 @@
-from CodeInspector.app.definitions.models import CheckstyleViolation
+from CodeInspector.app.infrastructure import CheckstyleViolation
 import xml.etree.ElementTree as ET
 
 def parse_checkstyle(xml_text: str) -> list[CheckstyleViolation]:

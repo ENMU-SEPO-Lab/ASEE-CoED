@@ -6,80 +6,6 @@ import pandas as pd
 import subprocess
 from scipy.stats import percentileofscore
  
-def parse_test_results(test_file_path):
-    try:
-        print("test_file_path: ", test_file_path)
-        with open(test_file_path, 'r') as file:
-            lines = file.readlines()
-
-        # Initialize structure
-        result = {
-            "testSuite": "",
-            "summary": {
-                "testsRun": 0,
-                "failures": 0,
-                "errors": 0,
-                "skipped": 0,
-                "timeElapsed": ""
-            },
-            "testCases": []
-        }
-
-        current_test_case = None
-
-        # Parse the file line by line
-        for line in lines:
-            line = line.strip()
-            print("Test-Line: ", line)
-            if line.startswith("Testsuite:"):
-                result["testSuite"] = line.split(":")[1].strip()
-            elif line.startswith("Tests run:"):
-                parts = line.split(", ")
-                result["summary"]["testsRun"] = int(parts[0].split(":")[1].strip())
-                result["summary"]["failures"] = int(parts[1].split(":")[1].strip())
-                result["summary"]["errors"] = int(parts[2].split(":")[1].strip())
-                result["summary"]["skipped"] = int(parts[3].split(":")[1].strip())
-                result["summary"]["timeElapsed"] = parts[4].split(":")[1].strip()
-            elif line.startswith("Testcase:"):
-                if current_test_case:
-                    result["testCases"].append(current_test_case)
-                parts = line.split(" took ")
-                test_case_name = parts[0].split(":")[1].strip()
-                time_taken = parts[1].strip()
-                current_test_case = {
-                    "name": test_case_name,
-                    "time": time_taken,
-                    "status": "PASSED"
-                }
-            elif line.startswith("FAILED"):
-                if current_test_case:
-                    current_test_case["status"] = "FAILED"
-                    current_test_case["failureDetails"] = {}
-            elif line.startswith("Caused an ERROR"): # define behavior for "Caused an ERROR" case
-                if current_test_case:
-                    current_test_case["status"] = "ERROR"
-                    current_test_case["failureDetails"] = {}
-            elif line.startswith("expected:") and current_test_case:
-                message = line.strip()
-                current_test_case["failureDetails"]["message"] = message
-            elif line.startswith("at ") and current_test_case:
-                # initialize failureDetails value as as empty dict to prevent None type
-                if "failureDetails" not in current_test_case: 
-                    current_test_case["failureDetails"] = {}
-                if "stackTrace" not in current_test_case["failureDetails"]:
-                    current_test_case["failureDetails"]["stackTrace"] = []
-                current_test_case["failureDetails"]["stackTrace"].append(line.strip())
-
-        # Add the last test case if exists
-        if current_test_case:
-            result["testCases"].append(current_test_case)
-
-        return result
- 
-    except Exception as e:
-        print(f"Failed to parse test results: {e}")
-        return {}
-
 def create_json_output(student_name, check_date, checkstyle_errors, pmd_violations, test_results):
 
     # Count LOC but ignore white space
@@ -169,7 +95,7 @@ test_results = parse_test_results(test_file_path)
  
 # Define metadata
 student_name = "CodeInspector" # TODO: Need this extracted from .java source file dynamically using grep as well
- 
+
 # Get the current date and time
 current_datetime = datetime.now()
 check_date = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")  # Format to avoid invalid characters in file names

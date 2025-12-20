@@ -3,8 +3,23 @@
 """
 
 import json
+import CodeInspector.app.transforming.helpers as helper
+import CodeInspector.app.transforming.validation as validator
+
+UPLOAD_DIR_PATH = "Upload_here/" # put in config file?
 
 def run_pipeline(checkstyle_xml, pmd_xml, junit_txt, grading_config) -> GradeResult:
+    
+    parsed = helper.parse_and_combine_test_files(checkstyle_xml, pmd_xml, junit_txt)
+    
+    check_date = helper.check_date()
+    loc = helper.count_loc_in_dir(UPLOAD_DIR_PATH)
+    student_name = validator.extract_author_from_submission(UPLOAD_DIR_PATH)
+    
+    violation_report = helper.build_violation_report(student_name, check_date, loc, parsed)
+    
+    # TODO: Grading and persistence
+    
     pass
     
 if __name__ == "__main__":
