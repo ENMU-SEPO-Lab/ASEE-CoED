@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import TypeAlias
 
 @dataclass
 class CheckstyleViolation:
@@ -39,16 +40,16 @@ class UnitTestingSummary:
  
 @dataclass 
 class UnitTestCase:
-    name: str = None
-    time: str = None
-    status: str = None  
+    name: str | None = None
+    time: str | None = None
+    status: str | None = None  
     failure_details: TestFailureDetails | None = None
     
 @dataclass 
 class UnitTestingResults:
     summary: UnitTestingSummary
     testcases: list[UnitTestCase]
-    test_suite: str = ""
+    test_suite: str | None = None
     
 @dataclass
 class CombinedParsedViolations:
@@ -64,70 +65,126 @@ class ViolationReport:
     lines_of_code: int
     violations: CombinedParsedViolations
 
+# a violation can be either of type Checkstyle or PMD
+Violation: TypeAlias = CheckstyleViolation | PmdViolation
+
 @dataclass
-class ErrorsWithinCategoryStats:
-    category_stats: dict[str, int]
+class ErrorsWithinType:
+    # each error type can occur multiple times
+    violations: list[Violation] = field(default_factory=list)
     
-    def get_most_common_error_category_and_count(self) -> tuple[str, int]:
-        return max(
-            self.category_stats.items(), 
-            key=lambda x: x[1], 
-            default=("None", 0)
+    def total_errors(self) -> int:
+        # get total error count within type
+        return len(self.violations)
+        
+@dataclass
+class TypesWithinCategory:
+    # one category class can have multiple subtypes
+    # type_name: str -> type_structure
+    types: dict[str, ErrorsWithinType] = field(default_factory=dict)
+    
+    def total_errors(self) -> int:
+        # get total error count within category
+        return sum(
+            type.total_errors()
+            for type in self.types.values()
         )
     
-    def total_errors(self) -> int:
-        return sum(self.category_stats.values())
+    def get_most_common_error_type_and_count(self) -> tuple[str, int]:
+        
+        if not self.types:
+            return ("None", 0) 
+        
+        return max(
+                (
+                    (type_name, type_class.total_errors())
+                    for type_name, type_class in self.types.items()
+                ),
+                key=lambda type_and_count: type_and_count[1]
+            )  
     
 @dataclass
-class ErrorsWithinSeverityStats:
-    severity_stats: dict[str, ErrorsWithinCategoryStats]
+class CategoriesWithinSeverity:
+    # one severity class can have multiple subcategories.
+    # category_name: str -> category_structure 
+    
+    categories: dict[str, TypesWithinCategory] = field(default_factory=dict)
     
     def total_errors(self) -> int:
+        # get total error count within severity
         return sum(
-            stats.total_errors()
-            for stats in self.severity_stats.values()
+            category.total_errors()
+            for category in self.categories.values()
+        )
+        
+    def get_most_common_error_category_and_count(self) -> tuple[str, int]:
+        
+        if not self.categories:
+            return ("None", 0) 
+        
+        return max(
+                (
+                    (category_name, category_class.total_errors())
+                    for category_name, category_class in self.categories.items()
+                ),
+                key=lambda category_and_count: category_and_count[1]
+            )   
+    
+@dataclass
+class SeveritiesWithinFile:
+    # one file can contain errors of multiple severity classes (checkstyle: 3, pmd: 5)
+    # severity_name: str -> severity_structure 
+    severities: dict[str, CategoriesWithinSeverity] = field(default_factory=dict)
+    
+    def total_errors(self) -> int:
+        # get total error count within file
+        return sum(
+            severity.total_errors()
+            for severity in self.severities.values()
         )
         
     def get_most_common_severity(self) -> tuple[str, int]:
-        if not self.severity_stats:
+        if not self.severities:
             return ("None", 0)
 
         return max(
             (
-                (severity, stats.total_errors())
-                for severity, stats in self.severity_stats.items()
+                (severity_name, severity_class.total_errors()) 
+                for severity_name, severity_class in self.severities.items()
             ),
             key=lambda severity_and_count: severity_and_count[1]
-        )    
+        )   
     
 @dataclass
-class ErrorsWithinFileStats:
-    file_stats: dict[str, ErrorsWithinSeverityStats]
+class FilesWithinSubmission:
+    # one submission can contain multiple files.
+    # file_name -> file_datastructure
+    files: dict[str, SeveritiesWithinFile] = field(default_factory=dict)
     
     def total_errors(self) -> int:
+        # get total error count within submission
         return sum(
-            stats.total_errors()
-            for stats in self.file_stats.values()
+            file.total_errors()
+            for file in self.files.values()
         )
-
+        
     def get_file_with_most_errors(self) -> tuple[str, int]:
-        if not self.file_stats:
+    
+        if not self.files:
             return ("None", 0)
 
         return max(
             (
-                (file, stats.total_errors())
-                for file, stats in self.file_stats.items()
+                (file_name, stats.total_errors()) 
+                for file_name, stats in self.files.items()
             ),
             key=lambda file_and_count: file_and_count[1]
-        )    
-
-@dataclass
-class ErrorsWithinSubmissionStats:
-    submission_stats: dict[str, ErrorsWithinFileStats]
-    
-    def total_errors(self) -> int:
-        return sum(
-            stats.total_errors()
-            for stats in self.submission_stats.values()
         )
+        
+    def add_violation(self, file_name: str, severity: str, category: str, type_name: str, violation: Violation) -> None:
+        
+        file_bucket = self.files.setdefault(file_name, SeveritiesWithinFile())
+        severity_bucket = file_bucket.severities.setdefault(severity, CategoriesWithinSeverity())
+        category_bucket = severity_bucket.categories.setdefault(category, TypesWithinCategory())
+        type_bucket = category_bucket.types.setdefault(type_name, ErrorsWithinType())
+        type_bucket.violations.append(violation)

@@ -5,6 +5,7 @@ from CodeInspector.app.parsing import checkstyle
 from CodeInspector.app.parsing import junit
 from pathlib import Path
 from datetime import datetime
+import os
 
 def build_violation_report(student_name: str, check_date: str, loc: int, parsed: CombinedParsedViolations) -> ViolationReport:
     
@@ -157,3 +158,7 @@ def check_date() -> str:
     # get the current date and time
     current_datetime = datetime.now()
     return current_datetime.strftime("%Y-%m-%d_%H-%M-%S")  # Format to avoid invalid characters in file names
+
+def create_grading_dir(dir_path: str):
+    
+    os.makedirs(dir_path, exist_ok=True)

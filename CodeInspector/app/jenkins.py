@@ -1,128 +1,12 @@
-from datetime import datetime
 import xml.etree.ElementTree as ET
 import json
 import os
 import pandas as pd
-import subprocess
 from scipy.stats import percentileofscore
- 
-def create_json_output(student_name, check_date, checkstyle_errors, pmd_violations, test_results):
-
-    # Count LOC but ignore white space
-    command = r"grep -v '^\s*$' Upload_here/*.java | wc -l"
-    
-    # Count LOC but ignore white space and comments
-    #command = r"grep -v '^\s*$' ../Upload_here/*.java | grep -v '^\s*//' | grep -v '^\s*/\*' | grep -v '^\s*\*' | grep -v '^\s*\*/' | wc -l"
-    
-    result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    
-    loc = 200
-    current_dir = os.getcwd()
-    print("Current directory:", current_dir)
-    if result.returncode == 0:
-        loc = int(result.stdout.strip())
-        print(f"LOC determined dynamically. LOC = {loc}")
-    
-    if loc <= 0:
-        loc = 100
-    
-    print("LOC: ", loc)
-    
-    # Combine Checkstyle and PMD violations into a single structure
-    output = {
-        "System": student_name,
-        "studentName": student_name, # TODO: Need this extracted from .java source file dynamically using grep as well
-        "checkDate": check_date,
-        "linesOfCode": loc,
-        "violations": {
-            "checkstyle": checkstyle_errors,
-            "pmd": pmd_violations,
-            "Unit testing": test_results
-        }
-    }
-    return output
-
-# Define the paths to the XML files
-checkstyle_file_path = 'build/test-reports/checkstyle-result.xml'
-pmd_file_path = 'build/test-reports/pmd.xml'
- 
-# Directories
-test_dir = "test"
-reports_dir = "build/test-reports"
- 
-# Ensure the reports directory exists
-os.makedirs(reports_dir, exist_ok=True)
- 
-# Get the first (and only) file in the test directory
-test_files = os.listdir(test_dir)
-if not test_files:
-    print("No test file found in the 'test' directory.")
-    exit(1)  # Exit with an error if no file exists
- 
-test_file = test_files[0]  # Since there's only one file
-file_name, _ = os.path.splitext(test_file)  # Extract filename without extension
- 
-# Construct the new report filename
-new_filename = f"TEST-{file_name}.txt"
-test_file_path = os.path.join(reports_dir, new_filename)
- 
-#test_file_path = "build/test-reports/TEST-TestCases.txt"
-print("test_file_path: ", test_file_path)
- 
-# Parse the Checkstyle XML file
-checkstyle_errors = parse_checkstyle(checkstyle_file_path)
- 
-# Print the parsed Checkstyle errors to the console
-if checkstyle_errors:
-    print("Checkstyle Errors:")
-    for error in checkstyle_errors:
-        print(f"File: {error['file']}, Line: {error['line']}, Severity: {error['severity']}, Message: {error['message']}, Source: {error['source']}")
-else:
-    print("No Checkstyle errors found or failed to parse the file.")
- 
-# Parse the PMD XML file
-pmd_violations = parse_pmd(pmd_file_path)
- 
-# Print the parsed PMD violations to the console
-if pmd_violations:
-    print("\\nPMD Violations:")
-    for violation in pmd_violations:
-        print(f"File: {violation['file']}, Line: {violation['beginline']}, Rule: {violation['rule']}, Message: {violation['message']}, URL: {violation['externalInfoUrl']}")
-else:
-    print("\\nNo PMD violations found or failed to parse the file.")
-
-test_results = parse_test_results(test_file_path)
- 
-# Define metadata
-student_name = "CodeInspector" # TODO: Need this extracted from .java source file dynamically using grep as well
-
-# Get the current date and time
-current_datetime = datetime.now()
-check_date = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")  # Format to avoid invalid characters in file names
- 
-# Generate the JSON output
-output_json = create_json_output(student_name, check_date, checkstyle_errors, pmd_violations, test_results)
- 
-# Create the output directory if it doesn't exist
-output_dir = "build/test-reports/"
-os.makedirs(output_dir, exist_ok=True)
- 
-# Create a dynamic output file name
-output_file_path = os.path.join(output_dir, f"violations.json")
- 
-# Save the JSON output to the file
-with open(output_file_path, 'w') as json_file:
-    json.dump(output_json, json_file, indent=4)
- 
-print(f"JSON output saved to {output_file_path}")
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ================================= Grade Report Creation Starts Here =====================================
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-grade_report_dir = "build/grade-reports/"
-grading_config_path = "lib/grading_config.json"
-os.makedirs(grade_report_dir, exist_ok=True)
 
 BUILD_XML_PATH = "build.xml"
 RECORDS_FILE_PATH = "records/records.json"
