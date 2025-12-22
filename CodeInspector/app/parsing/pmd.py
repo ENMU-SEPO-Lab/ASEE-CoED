@@ -17,7 +17,7 @@ def parse_pmd(xml_text: str) -> list[PmdViolation]:
             for violation in file_element.findall('pmd:violation', namespace):
                 violations.append(
                     PmdViolation(
-                        file = file_element.get('name'),
+                        file_name = file_element.get('name'),
                         begin_line = _to_int(violation.get('beginline')),
                         end_line = _to_int(violation.get('endline')),
                         begin_column = _to_int(violation.get('begincolumn')),
@@ -27,7 +27,7 @@ def parse_pmd(xml_text: str) -> list[PmdViolation]:
                         class_name = violation.get('class'),
                         method = violation.get('method'),
                         variable = violation.get('variable'),
-                        priority = _to_int(violation.get('priority')),
+                        priority = violation.get('priority'),
                         message = violation.text.strip() if violation.text else '',
                         external_info_url= violation.get('externalInfoUrl')
                     )

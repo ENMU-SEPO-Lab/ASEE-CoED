@@ -1,17 +1,18 @@
 from dataclasses import dataclass, field
 from typing import TypeAlias
-
+    
 @dataclass
 class CheckstyleViolation:
-    file: str
+    file_name: str
     line: int
     severity: str
+    category: str
+    type_name: str
     message: str
-    source: str
     
 @dataclass
 class PmdViolation:
-    file: str
+    file_name: str
     begin_line: int
     end_line: int
     begin_column: int
@@ -47,8 +48,8 @@ class UnitTestCase:
     
 @dataclass 
 class UnitTestingResults:
-    summary: UnitTestingSummary
-    testcases: list[UnitTestCase]
+    summary: UnitTestingSummary | None = None
+    testcases: list[UnitTestCase] | None = None
     test_suite: str | None = None
     
 @dataclass
@@ -69,7 +70,7 @@ class ViolationReport:
 Violation: TypeAlias = CheckstyleViolation | PmdViolation
 
 @dataclass
-class ErrorsWithinType:
+class ViolationsWithinType:
     # each error type can occur multiple times
     violations: list[Violation] = field(default_factory=list)
     
@@ -81,13 +82,13 @@ class ErrorsWithinType:
 class TypesWithinCategory:
     # one category class can have multiple subtypes
     # type_name: str -> type_structure
-    types: dict[str, ErrorsWithinType] = field(default_factory=dict)
+    types: dict[str, ViolationsWithinType] = field(default_factory=dict)
     
     def total_errors(self) -> int:
         # get total error count within category
         return sum(
-            type.total_errors()
-            for type in self.types.values()
+            t.total_errors()
+            for t in self.types.values()
         )
     
     def get_most_common_error_type_and_count(self) -> tuple[str, int]:
@@ -154,11 +155,36 @@ class SeveritiesWithinFile:
             ),
             key=lambda severity_and_count: severity_and_count[1]
         )   
+
+@dataclass
+class CheckstyleSeveritiesWithinFile(SeveritiesWithinFile):
+    # initialize structure with severity keys for checkstyle
+    def __post_init__(self):
+        
+        self.severities = {
+            "info": CategoriesWithinSeverity(),
+            "warning": CategoriesWithinSeverity(),
+            "error": CategoriesWithinSeverity()
+        }
     
 @dataclass
-class FilesWithinSubmission:
+class PmdSeveritiesWithinFile(SeveritiesWithinFile):
+    # initialize structure with severity keys for pmd
+    def __post_init__(self):
+        
+        self.severities = {
+            "5": CategoriesWithinSeverity(),
+            "4": CategoriesWithinSeverity(),
+            "3": CategoriesWithinSeverity(),
+            "2": CategoriesWithinSeverity(),
+            "1": CategoriesWithinSeverity()
+        }
+
+@dataclass
+class ProcessedViolations:
     # one submission can contain multiple files.
     # file_name -> file_datastructure
+    severity_class: type[SeveritiesWithinFile]
     files: dict[str, SeveritiesWithinFile] = field(default_factory=dict)
     
     def total_errors(self) -> int:
@@ -180,11 +206,14 @@ class FilesWithinSubmission:
             ),
             key=lambda file_and_count: file_and_count[1]
         )
+    
+    def file_bucket(self, file_name: str) -> SeveritiesWithinFile:
+        return self.files.setdefault(file_name, self.severity_class())
         
     def add_violation(self, file_name: str, severity: str, category: str, type_name: str, violation: Violation) -> None:
         
-        file_bucket = self.files.setdefault(file_name, SeveritiesWithinFile())
+        file_bucket = self.file_bucket(file_name)
         severity_bucket = file_bucket.severities.setdefault(severity, CategoriesWithinSeverity())
         category_bucket = severity_bucket.categories.setdefault(category, TypesWithinCategory())
-        type_bucket = category_bucket.types.setdefault(type_name, ErrorsWithinType())
+        type_bucket = category_bucket.types.setdefault(type_name, ViolationsWithinType())
         type_bucket.violations.append(violation)

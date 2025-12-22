@@ -9,13 +9,20 @@ def parse_checkstyle(xml_text: str) -> list[CheckstyleViolation]:
         for file_element in root.findall('file'):
  
             for error in file_element.findall('error'):
+                
+                source = file_element.attrib.get("source", "")
+                parts = source.split(".")
+                
                 errors.append(
                     CheckstyleViolation(
-                        file = file_element.attrib['name'],
-                        line = error.attrib['line'],
-                        severity = error.attrib['severity'],
-                        message = error.attrib['message'],
-                        source = error.attrib['source']
+                        file_name = file_element.attrib.get("name", ""),
+                        line = int(error.attrib.get('line', "0")),
+                        severity = file_element.attrib.get("severity", ""),
+                        # split the string to get the second to last part, i.e the violation category
+                        category = source.rsplit(".", 2)[-2],
+                        # split the string to get the last part, i.e the specific violation type
+                        type_name = source.rsplit(".", 1)[-1],
+                        message = file_element.attrib.get("message", "")
                     )
                 )
         return errors

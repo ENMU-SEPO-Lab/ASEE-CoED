@@ -5,6 +5,8 @@
 import json
 import CodeInspector.app.transforming.helpers as helper
 import CodeInspector.app.transforming.validation as validator
+import CodeInspector.app.transforming.loc as line_counter
+import CodeInspector.app.parsing.parser as parser
 
 # Paths. should move to config file??
 UPLOAD_DIR_PATH = "Upload_here/"
@@ -14,10 +16,10 @@ RECORDS_FILE_PATH = "records/records.json"
 
 def run_pipeline(checkstyle_xml, pmd_xml, junit_txt, grading_config) -> GradeResult:
     
-    parsed = helper.parse_and_combine_test_files(checkstyle_xml, pmd_xml, junit_txt)
+    parsed = parser.parse_and_combine_test_files(checkstyle_xml, pmd_xml, junit_txt)
     
     check_date = helper.check_date() # get current date and format it
-    loc = helper.count_loc_in_dir(UPLOAD_DIR_PATH) # count the lines of code detected in the submission dir
+    loc = line_counter.count_loc_in_dir(UPLOAD_DIR_PATH) # count the lines of code detected in the submission dir
     student_name = validator.extract_author_from_submission(UPLOAD_DIR_PATH)
     
     violation_report = helper.build_violation_report(student_name, check_date, loc, parsed)
