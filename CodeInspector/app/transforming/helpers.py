@@ -1,10 +1,11 @@
-from CodeInspector.app.infrastructure.models import CombinedParsedViolations, ViolationReport
+from app.infrastructure.models import CombinedParsedViolations, ViolationReport
 from datetime import datetime
 import os
 
 def build_violation_report(student_name: str, check_date: str, loc: int, parsed: CombinedParsedViolations) -> ViolationReport:
     
     report = ViolationReport(
+        system = "CodeInspector",
         student_name = student_name,
         check_date = check_date,
         lines_of_code = loc,

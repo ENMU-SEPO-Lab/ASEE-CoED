@@ -1,7 +1,7 @@
-from CodeInspector.app.parsing import pmd
-from CodeInspector.app.parsing import checkstyle
-from CodeInspector.app.parsing import junit
-from CodeInspector.app.infrastructure.models import CombinedParsedViolations
+from app.parsing import pmd
+from app.parsing import checkstyle
+from app.parsing import junit
+from app.infrastructure.models import CombinedParsedViolations
 
 def parse_and_combine_test_files (checkstyle_xml, pmd_xml, junit_txt) -> CombinedParsedViolations:
     
