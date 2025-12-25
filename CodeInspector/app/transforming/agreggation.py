@@ -4,11 +4,22 @@ from app.infrastructure.models import(
     PmdViolation,
     PmdSeveritiesWithinFile,
     ProcessedViolations,
+    CombinedParsedViolations,
     UnitTestCase,
-    UnitTestingResults
+    UnitTestingResults,
+    ProcessedJunitTests,
+    ProcessedSubmission
 )
 
-def process_checkstyle_violations (cs_violations: list[CheckstyleViolation]) -> ProcessedViolations:
+def process_submission_data(parsed_data: CombinedParsedViolations) -> ProcessedSubmission:
+    
+    cs_processed = _process_checkstyle_violations(parsed_data.checkstyle)
+    pmd_processed = _process_pmd_violations(parsed_data.pmd)
+    junit_processed = _process_junit(parsed_data.unit_testing)
+    
+    return ProcessedSubmission(cs_processed, pmd_processed, junit_processed)
+
+def _process_checkstyle_violations (cs_violations: list[CheckstyleViolation]) -> ProcessedViolations:
     
     processed = ProcessedViolations(severity_class = CheckstyleSeveritiesWithinFile)
     
@@ -23,7 +34,7 @@ def process_checkstyle_violations (cs_violations: list[CheckstyleViolation]) -> 
     
     return processed
 
-def process_pmd_violations (pmd_violations: list[PmdViolation]) -> ProcessedViolations:
+def _process_pmd_violations (pmd_violations: list[PmdViolation]) -> ProcessedViolations:
     
     processed = ProcessedViolations(severity_class = PmdSeveritiesWithinFile)
     
@@ -38,7 +49,7 @@ def process_pmd_violations (pmd_violations: list[PmdViolation]) -> ProcessedViol
         
     return processed
 
-def get_failed_tests (unit_testing_report: UnitTestingResults) -> list[UnitTestCase]:
+def _process_junit (unit_testing_report: UnitTestingResults) -> ProcessedJunitTests:
     
     unit_tests = unit_testing_report.testcases
     failed_tests: list[UnitTestCase] = []
@@ -47,4 +58,4 @@ def get_failed_tests (unit_testing_report: UnitTestingResults) -> list[UnitTestC
         if test.status == "FAILED":
             failed_tests.append(test)
                 
-    return failed_tests
+    return ProcessedJunitTests(unit_tests, failed_tests)

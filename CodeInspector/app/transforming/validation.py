@@ -4,7 +4,7 @@ from pathlib import Path
 JAVADOC_BLOCK_RE = re.compile(r"/\*\*(.*?)\*/", re.DOTALL)
 AUTHOR_TAG_RE = re.compile(r"@author\s+([A-Za-z]+\.[A-Za-z]+@enmu\.edu)")
  
-def extract_authors_from_java(source: str) -> set:
+def _extract_authors_from_java_file(source: str) -> set:
     """
     returns collection of valid author tags found (john.doe@enmu.edu).
     can be multiple.
@@ -48,7 +48,7 @@ def extract_author_from_submission(source_dir: str) -> str | None:
         except OSError:
             continue
         
-        authors.update(extract_authors_from_java(source))
+        authors.update(_extract_authors_from_java_file(source))
         
     if len(authors) == 1:
         return next(iter(authors))

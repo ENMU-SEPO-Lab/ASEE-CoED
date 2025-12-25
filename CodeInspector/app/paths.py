@@ -6,7 +6,7 @@ print (PROJECT_ROOT)
 UPLOAD_DIR = PROJECT_ROOT / "Upload_here"
 CONFIG_DIR = PROJECT_ROOT / "config"
 XML_REPORT_DIR = PROJECT_ROOT / "build/test-reports"
-GRADING_DIR = PROJECT_ROOT / "build/grade_reports"
+GRADE_REPORTS_DIR = PROJECT_ROOT / "build/grade_reports"
 
 CS_XML_FILE = XML_REPORT_DIR / "checkstyle-result.xml"
 PMD_XML_FILE = XML_REPORT_DIR / "pmd.xml"

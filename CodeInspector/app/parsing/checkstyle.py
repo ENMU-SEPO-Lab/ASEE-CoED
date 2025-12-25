@@ -13,10 +13,10 @@ def parse_checkstyle(xml_text: str) -> list[CheckstyleViolation]:
                 source = error.attrib.get("source", "")
                 parts = source.split(".")
                 print(parts)
-                # split the string to get the second to last part, i.e the violation category
-                category = parts[-2] if len(parts) >= 2 else source
+                # split the string to get second to last part, i.e the violation category if existent
+                category = parts[-2] if len(parts) >= 7 else None
                 # split the string to get the last part, i.e the specific violation type
-                type_name = parts[-1] if len(parts) >= 2 else source
+                type_name = parts[-1] if len(parts) >= 1 else source
                 
                 errors.append(
                     CheckstyleViolation(

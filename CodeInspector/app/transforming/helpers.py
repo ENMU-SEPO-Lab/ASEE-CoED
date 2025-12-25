@@ -23,3 +23,7 @@ def check_date() -> str:
 def create_grading_dir(dir_path: str):
     
     os.makedirs(dir_path, exist_ok=True)
+    
+def create_grading_rep_file_name(grade_report_dir: str, date: str) -> str:
+    
+    return os.path.join(grade_report_dir, f"{date}.txt")

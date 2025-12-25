@@ -13,10 +13,10 @@ def count_loc_in_dir(source_dir: str | Path) -> int:
     source_dir = Path(source_dir)
     total = 0
     for java_file in source_dir.rglob("*.java"):
-        total += count_loc_in_file(java_file)
+        total += _count_loc_in_file(java_file)
     return total
 
-def count_loc_in_file(path: str | Path) -> int:
+def _count_loc_in_file(path: str | Path) -> int:
     """
     function to count the lines of java code within a single file
 
