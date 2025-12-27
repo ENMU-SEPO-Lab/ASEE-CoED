@@ -24,7 +24,7 @@ def _extract_authors_from_java_file(source: str) -> set:
 
     return authors
 
-def extract_author_from_submission(source_dir: str) -> str | None:
+def extract_author_from_submission(source_dir: Path | str) -> str | None:
     """
     function that extracts all valid author tags across a submission.
     if more than one is present, None is returned (invalid submission)

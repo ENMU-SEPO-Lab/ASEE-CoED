@@ -1,4 +1,5 @@
 from app.infrastructure.models import CombinedParsedViolations, ViolationReport
+from pathlib import Path
 from datetime import datetime
 import os
 
@@ -20,10 +21,12 @@ def check_date() -> str:
     current_datetime = datetime.now()
     return current_datetime.strftime("%Y-%m-%d_%H-%M-%S")  # Format to avoid invalid characters in file names
 
-def create_grading_dir(dir_path: str):
+def create_grading_dir(dir_path: Path | str):
     
-    os.makedirs(dir_path, exist_ok=True)
+    grading_dir_path = Path(dir_path)
+    os.makedirs(grading_dir_path, exist_ok=True)
     
-def create_grading_rep_file_name(grade_report_dir: str, date: str) -> str:
+def create_grading_rep_file_name(dir_path: Path | str, date: str) -> str:
     
+    grade_report_dir = Path(dir_path)
     return os.path.join(grade_report_dir, f"{date}.txt")

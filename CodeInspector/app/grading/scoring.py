@@ -36,6 +36,7 @@ def calculate_submission_score(
     run_score = run_dict.get("excellent", 20)
     
     overall_score = coding_std_score + req_score + run_score
+    overall_weighted_error = cs_weighted_error + pmd_weighted_error
     
     return SubmissionScores(
         cs_score,
@@ -45,7 +46,8 @@ def calculate_submission_score(
         test_success_ratio,
         coding_std_score,
         req_score,
-        overall_score
+        overall_score,
+        overall_weighted_error
     )
 
 def _calculate_static_analysis_tool_score(

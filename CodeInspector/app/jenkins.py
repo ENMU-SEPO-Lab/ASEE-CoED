@@ -288,41 +288,7 @@ def format_code_violation_example(filename, line, message, example):
         f"{"-" * 90}\n",
         f"  Feedback: {message}\n"
     ]
-    return formatted_lines
-
-def get_adjusted_penalty(violation_level, count, lines_of_code, tool_name):
-    # method to calculate the adjusted penalty (part of scoring algorithm)
-    try:
-        with open (grading_config_path, "r") as file:
-            data = json.load(file)
-            weights = data.get("weights", {}).get(tool_name, {})
-        
-        adjusted_pen, absolute_pen = 0, 0
-        print(weights)
-        if violation_level in weights:
-            absolute_pen = weights[violation_level] * count
-            # for debugging purposes / tracing the algorithm
-            print(
-                f"absolute_pen for {tool_name}, {violation_level}: {absolute_pen}\n"
-                f"abs_pen = {weights[violation_level]} * {count}\n"
-            )
-        else:
-            # debugging
-            print(f"Error calculating penalty for {tool_name}, {violation_level}")
-            return 0
-        
-        if lines_of_code == 0:
-            return 0
-        
-        weighted_error_density = absolute_pen / lines_of_code
-        error_density = count / lines_of_code
-        adjusted_pen = absolute_pen * error_density
-            
-    except Exception as e:
-        print(f"Error while opening weights JSON file. ERROR: {e}")
-        return 0
-    
-    return adjusted_pen, weighted_error_density     
+    return formatted_lines  
 
 def generate_unitTesting_output(unit_test_failures, number_of_tests, number_of_failures):
     # Generate a formatted output of failed unit test cases with descriptions
@@ -338,7 +304,7 @@ def generate_unitTesting_output(unit_test_failures, number_of_tests, number_of_f
         error_message = test_fail.get("failureDetails").get("message")
         unit_testing_lines.append(f"    Test: {test_name} failed with the error: {error_message}\n")
         
-    return unit_testing_lines 
+    return unit_testing_lines
    
 def generate_score_output(requirements_score, runtime_score, coding_stand_score):
     # Compute final score with the individual rubric scores and generate score output lines
@@ -353,46 +319,6 @@ def generate_score_output(requirements_score, runtime_score, coding_stand_score)
             f"\n{'=' * 45} END REPORT {'=' * 45}"
         ]
     return student_score_output
-
-def get_run_and_req_score(number_of_tests, number_of_failures):
-    """Calculate runtime and requirements score. Currently this is only based on the unit testing
-    results, as we don't have a proper way of automatically analyzing runtime scores.
-
-    Args:
-        number_of_tests (int): overall # of tests that were ran
-        number_of_failures (int): # of tests that failed
-
-    Returns:
-        tuple: (requirements score, runtime score)
-    """
-    requirements_score_range = [60, 48, 36, 10, 0] # from grading criteria of the course that is taught
-    runtime_score_range = [20, 16, 12, 8, 0] # from grading criteria of the course that is taught
-    
-    if number_of_tests == 0:
-        print("Number of Junit tests is 0.")
-        return 0, 0
-    
-    unit_test_success_ratio = 1 - round((number_of_failures / number_of_tests), 1)
-    requirements_score = 0
-    runtime_score = 0
-    
-    # assign score based on the unit test success ratio
-    if unit_test_success_ratio >= 0.9:
-        requirements_score = requirements_score_range[0]
-        runtime_score = runtime_score_range[0]
-    elif unit_test_success_ratio >= 0.8:
-        requirements_score = requirements_score_range[1]
-        runtime_score = runtime_score_range[1]
-    elif unit_test_success_ratio >= 0.5:
-        requirements_score = requirements_score_range[2]
-        runtime_score = runtime_score_range[2]
-    elif unit_test_success_ratio > 0:
-        requirements_score = requirements_score_range[3]
-        runtime_score = runtime_score_range[3]
-    else:
-        requirements_score = requirements_score_range[4]
-        runtime_score = runtime_score_range[4]
-    return requirements_score,runtime_score
 
 def calculate_percentile_score(checkStyle_error_density ,pmd_error_density, total_error_density):
     """Calculates the percentile scores of the computed error densities of the analyzed file in relation
@@ -418,10 +344,7 @@ def calculate_percentile_score(checkStyle_error_density ,pmd_error_density, tota
     return percentile_checkstyle, percentile_pmd, percentile_overall
 
 def update_json (student_name, error_density, upload_dir_name):
-    
-    if not check_json_exists():
-        print(f"Error: JSON file does not exist under {RECORDS_FILE_PATH}")
-        return
+
     try:
         with open(RECORDS_FILE_PATH, 'r+') as file:
             content = file.read().strip()
@@ -468,115 +391,6 @@ def get_upload_dir_name():
         if (property.get("name") == "src.dir"):
             return property.get("location")
     print(f"Failed to get upload directory name from {BUILD_XML_PATH}")
-
-def check_json_exists():
-    if not os.path.isfile(RECORDS_FILE_PATH):
-        try:
-            with open(RECORDS_FILE_PATH, 'w') as file:
-                json.dump({}, file, indent=4)
-            print(f"JSON records file created under {RECORDS_FILE_PATH}")
-            return True
-        except Exception as e:
-            print(e)
-            print("Failed to check if json exists")
-            return False
-    print(f"JSON records file found at {RECORDS_FILE_PATH}")
-    return True
-
-def compare_score_with_self(student_name, error_density, upload_dir_name):
-    if not check_json_exists():
-        print(f"Error: JSON file does not exist under {RECORDS_FILE_PATH}")
-        return
-    
-    with open(RECORDS_FILE_PATH, 'r') as file:
-        data = json.load(file)
-        assignment_data = data.get(upload_dir_name, {})
-        
-        if not assignment_data:
-            print(f"There are no records under {upload_dir_name}")
-            return
-        
-        student_data = assignment_data.get(student_name, [])
-        
-        if not student_data:
-            print(f"There are no records for {student_name} under {upload_dir_name}")
-            return
-        
-        error_density_list = []
-        
-        for record in student_data: # iterate over all submission records of student for this assigment
-            error_density_list.append(record.get("error density", 0))
-        
-        if len(error_density_list) <= 1: # if this is the first submission for this assignment
-            return
-        
-        # average recorded error density across all submissions the student made for this assignment
-        average_error_density = round(sum(error_density_list) / len(error_density_list), 4)
-        # reltive change compared to the last submission
-        relative_change = round(error_density / error_density_list[(len(error_density_list) - 2)], 4) * 100
-        
-        print(
-            f"\n{'=' * 30}",
-            f"\nYour average error density for this assignment is: {average_error_density}",
-            f"\nThe error density of this submission is {relative_change}% of your last submission.",
-            f"\n{'=' * 30}"
-        )
-        
-        return average_error_density, relative_change
-
-def compare_score_with_class(error_density, upload_dir_name):
-    if not check_json_exists():
-        print(f"Error: JSON file does not exist under {RECORDS_FILE_PATH}")
-        return
-    
-    with open(RECORDS_FILE_PATH, 'r') as file:
-        data = json.load(file)
-        assignment_data = data.get(upload_dir_name, {})
-        
-        if not assignment_data: # if no records under this directory name
-            print(f"There are no records under {upload_dir_name}")
-            return
-        
-        error_density_list = [] # initialize list to store the error_density values
-        
-        for student, submissions in assignment_data.items(): # iterate over all student records within the assigment
-            if submissions is None: # if student has no submissions 
-                continue
-            
-            for submission in submissions: # iterate over every submission
-                if submission is None:
-                    continue
-                
-                submission_error_density = submission.get("error density")
-                
-                if submission_error_density is not None:
-                    error_density_list.append(submission_error_density)
-                
-        if not error_density_list:
-            print(f"No error density records found under {upload_dir_name}")
-            return
-    
-        # calculate average error of all student submissions for this assignment
-        average_assignment_error = round(sum(error_density_list) / len(error_density_list), 4) 
-        # compare the score of the current submission to the overall average
-        score_relative_to_class = round(error_density / average_assignment_error, 4)
-        
-        # change output variables based on whether the errordensity is higher or lower
-        if score_relative_to_class < 1:
-            percent_value = (1 - score_relative_to_class) * 100
-            comparator = "lower"
-        else:
-            percent_value = (score_relative_to_class - 1) * 100
-            comparator = "higher"
-        
-        print(
-            f"\n{'=' * 30}"
-            f"\nThe average error density of the class for this assignment is: {average_assignment_error}",
-            f"\nYour error density was {round(percent_value, 2)}% {comparator} than the class average.",
-            f"\n{'=' * 30}"
-        )
-        
-        return average_assignment_error, score_relative_to_class
 
 # generate grade report using the previously constructed JSON file
 def create_grade_report(json_output_file_path):

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-def count_loc_in_dir(source_dir: str | Path) -> int:
+def count_loc_in_dir(source_dir: Path | str) -> int:
     """
     function to count lines of code of all Java files in a given dir. Ignores whitespace lines and comments
 
@@ -16,7 +16,7 @@ def count_loc_in_dir(source_dir: str | Path) -> int:
         total += _count_loc_in_file(java_file)
     return total
 
-def _count_loc_in_file(path: str | Path) -> int:
+def _count_loc_in_file(path: Path | str) -> int:
     """
     function to count the lines of java code within a single file
 

@@ -243,4 +243,5 @@ class SubmissionScores:
     coding_std_score: int
     req_score: int
     overall_score: int
+    overall_weighted_error: float
     run_score: int | None = None
