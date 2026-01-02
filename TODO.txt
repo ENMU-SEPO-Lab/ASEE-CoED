@@ -1,0 +1,13 @@
+TODO:
+
+- Persistence records:
+	-> JSON (top_n error list, ratios?, )
+	-> CSV (2D table to store all errors + counts per student across semester)
+
+- Report creation (info file for Gen-AI)
+
+
+Future objectives:
+
+- API implementation
+- Exposure to web

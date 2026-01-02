@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import TypeAlias
+from pathlib import Path
     
 @dataclass
 class CheckstyleViolation:
@@ -103,6 +104,15 @@ class TypesWithinCategory:
                 key=lambda type_and_count: type_and_count[1]
             )  
     
+    def get_top_n_error_types_and_counts_in_cat(self, top_n: int) -> list[tuple[str, int]]:
+        sorted_by_count_list = sorted(
+            ((name, error_type.get_error_count_within_type())
+             for name, error_type in self.types.items()),
+            key=lambda type_and_count: type_and_count[1],
+            reverse=True # sort in descending order by count value
+        )
+        return sorted_by_count_list[:top_n] # slice the first top_n tuples from the list an return them
+    
 @dataclass
 class CategoriesWithinSeverity:
     # one severity class can have multiple subcategories.
@@ -130,7 +140,18 @@ class CategoriesWithinSeverity:
                     for category_name, category_class in self.categories.items()
                 ),
                 key=lambda category_and_count: category_and_count[1]
-            )   
+            )
+        
+    def get_top_n_error_types_and_counts_in_sev(self, top_n: int) -> list[tuple[str, int]]:
+        
+        all_type_tuples = [
+            (type_name, count)
+            for category in self.categories.values()
+            for type_name, count in category.get_top_n_error_types_and_counts_in_cat(top_n)
+        ]
+        
+        all_type_tuples.sort(key=lambda type_and_count: type_and_count[1], reverse=True)
+        return all_type_tuples[:top_n]
     
 @dataclass
 class SeveritiesWithinFile:
@@ -155,7 +176,18 @@ class SeveritiesWithinFile:
                 for severity_name, severity_class in self.severities.items()
             ),
             key=lambda severity_and_count: severity_and_count[1]
-        )   
+        )
+        
+    def get_top_n_error_types_and_counts_in_file(self, top_n: int) -> list[tuple[str, int]]:
+    
+        all_type_tuples = [
+            (type_name, count)
+            for severity in self.severities.values()
+            for type_name, count in severity.get_top_n_error_types_and_counts_in_sev(top_n)
+        ]
+        
+        all_type_tuples.sort(key=lambda type_and_count: type_and_count[1], reverse=True)
+        return all_type_tuples[:top_n]   
 
 @dataclass
 class CheckstyleSeveritiesWithinFile(SeveritiesWithinFile):
@@ -222,6 +254,18 @@ class ProcessedViolations:
         type_bucket = category_bucket.types.setdefault(type_name, ViolationsWithinType())
         type_bucket.violations.append(violation)
         
+        
+    def get_top_n_error_types_and_counts_in_subm(self, top_n: int) -> list[tuple[str, int]]:
+    
+        all_type_tuples = [
+            (type_name, count)
+            for file_data in self.files.values()
+            for type_name, count in file_data.get_top_n_error_types_and_counts_in_file(top_n)
+        ]
+        
+        all_type_tuples.sort(key=lambda type_and_count: type_and_count[1], reverse=True)
+        return all_type_tuples[:top_n]   
+        
 @dataclass
 class ProcessedJunitTests:
     all_tests: list[UnitTestCase]
@@ -234,7 +278,10 @@ class ProcessedSubmission:
     junit_processed: ProcessedJunitTests
     
 @dataclass
-class SubmissionScores:
+class SubmissionData:
+    upload_dir_name: str
+    email: str
+    loc: int
     cs_score: int
     cs_weighted_error: float
     pmd_score: int
@@ -244,4 +291,6 @@ class SubmissionScores:
     req_score: int
     overall_score: int
     overall_weighted_error: float
+    top_cs_error_types: list[tuple[str, int]]
+    top_pmd_error_types: list[tuple[str, int]]
     run_score: int | None = None

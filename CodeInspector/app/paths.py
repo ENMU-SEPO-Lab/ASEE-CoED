@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1] # CodeInspector/
+PROJECT_ROOT = Path(__file__).resolve().parents[1] # .../CodeInspector/
 
 BUILD_XML_PATH = PROJECT_ROOT / "build.xml"
 CONFIG_DIR = PROJECT_ROOT / "app/config"
@@ -14,7 +14,9 @@ PMD_XML_FILE = XML_REPORT_DIR / "pmd.xml"
 JUNIT_RESULT_FILE = XML_REPORT_DIR / "TEST-TestCardDescription.txt"
 GRADING_CONFIG_FILE = CONFIG_DIR / "grading_config.json"
 RECORDS_JSON_FILE = RECORDS_DIR / "records.json"
-WEIGHTED_DATA_CSV = RECORDS_DIR / "weighted_data.csv"
+WEIGHTED_DATA_CSV = RECORDS_DIR / "historical/weighted_data.csv"
+CS_ERROR_DATA_CSV = RECORDS_DIR / "cs_errors.csv"
+PMD_ERROR_DATA_CSV = RECORDS_DIR / "pmd_errors.csv"
 
 def get_upload_dir_path() -> Path:
     # load the build.xml file

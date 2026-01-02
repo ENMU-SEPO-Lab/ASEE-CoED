@@ -30,7 +30,7 @@ def get_global_percentile_score(
     return percentile_checkstyle, percentile_pmd, percentile_overall
 
 def compare_score_with_self(
-    student_name: str, 
+    student_email: str, 
     error_density: float, 
     upload_dir: Path | str, 
     records: dict
@@ -43,15 +43,15 @@ def compare_score_with_self(
         print(f"There are no records for {assignment_dir}")
         return
     
-    student_data = assignment_data.get(student_name, [])
+    student_data = assignment_data.get(student_email, [])
     
     if not student_data:
-        print(f"There are no records for {student_name} under {assignment_dir}")
+        print(f"There are no records for {student_email} under {assignment_dir}")
         return
     
     error_density_list = []
     
-    for record in student_data: # iterate over all submission records of student for this assigment
+    for record in student_data: # iterate over all submission records of student for this assignment
         error_density_list.append(record.get("error density", 0))
     
     if len(error_density_list) <= 1: # if this is the first submission for this assignment

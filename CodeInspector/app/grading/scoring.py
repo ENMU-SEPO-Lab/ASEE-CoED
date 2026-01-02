@@ -2,14 +2,17 @@ from app.infrastructure.models import(
     ProcessedSubmission,
     ProcessedViolations,
     ProcessedJunitTests,
-    SubmissionScores
+    SubmissionData
 )
+from pathlib import Path
 
-def calculate_submission_score(
+def evaluate_submission(
+    student_email: str,
     processed_data: ProcessedSubmission, 
     loc: int, 
-    grading_config: dict
-) -> SubmissionScores:
+    grading_config: dict,
+    upload_dir: Path | str
+) -> SubmissionData:
     
     coding_stds_dict = grading_config.get("criteria_ratings", {}).get("coding_standards", {})
     req_dict = grading_config.get("criteria_ratings", {}).get("requirements", {})
@@ -31,14 +34,25 @@ def calculate_submission_score(
     )
     
     coding_std_score = _calculate_coding_stds_score(cs_score, pmd_score)
-    req_score, test_success_ratio = _calculate_requirements_score(processed_data.junit_processed, req_dict)
+    req_score, test_success_ratio = _calculate_requirements_score(
+        processed_data.junit_processed, 
+        req_dict
+    )
     # run_score, run_ratio = calculate_runtime_score(processed_runtime_data, run_dict)
     run_score = run_dict.get("excellent", 20)
     
     overall_score = coding_std_score + req_score + run_score
     overall_weighted_error = cs_weighted_error + pmd_weighted_error
     
-    return SubmissionScores(
+    top_n_cs_errors = processed_data.cs_processed.get_top_n_error_types_and_counts_in_subm(3)
+    top_n_pmd_errors = processed_data.pmd_processed.get_top_n_error_types_and_counts_in_subm(3)
+    
+    upload_dir_name = upload_dir.name
+    
+    return SubmissionData(
+        upload_dir_name,
+        student_email,
+        loc,
         cs_score,
         cs_weighted_error,
         pmd_score,
@@ -47,7 +61,9 @@ def calculate_submission_score(
         coding_std_score,
         req_score,
         overall_score,
-        overall_weighted_error
+        overall_weighted_error,
+        top_n_cs_errors,
+        top_n_pmd_errors
     )
 
 def _calculate_static_analysis_tool_score(
@@ -83,7 +99,7 @@ def _calculate_static_analysis_tool_score(
     final_penalty = min(total_penalty, max_deduction)
     final_score = max(max_score - final_penalty, min_score)
     
-    return final_score, round(weighted_error_density, 4)
+    return final_score, round(weighted_error_density, 6)
 
 def _calculate_coding_stds_score(cs_score: int, pmd_score: int) -> int:
     return round((cs_score + pmd_score) / 2)

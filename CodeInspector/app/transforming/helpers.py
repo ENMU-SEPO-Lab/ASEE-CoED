@@ -3,11 +3,11 @@ from pathlib import Path
 from datetime import datetime
 import os
 
-def build_violation_report(student_name: str, check_date: str, loc: int, parsed: CombinedParsedViolations) -> ViolationReport:
+def build_violation_report(student_email: str, check_date: str, loc: int, parsed: CombinedParsedViolations) -> ViolationReport:
     
     report = ViolationReport(
         system = "CodeInspector",
-        student_name = student_name,
+        student_name = student_email,
         check_date = check_date,
         lines_of_code = loc,
         violations = parsed
