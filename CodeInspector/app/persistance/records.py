@@ -3,8 +3,8 @@ from pathlib import Path
 import json
 
 def update_json (
-    records_file_path: Path | str,
-    submission_data: SubmissionData
+    submission_data: SubmissionData,
+    records_file_path: Path | str
 ) -> None:
 
     file_path = Path(records_file_path)

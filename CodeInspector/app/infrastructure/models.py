@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import TypeAlias
-from pathlib import Path
+from collections import Counter
     
 @dataclass
 class CheckstyleViolation:
@@ -57,7 +57,7 @@ class UnitTestingResults:
 class CombinedParsedViolations:
     checkstyle: list[CheckstyleViolation]
     pmd: list[PmdViolation]
-    unit_testing: UnitTestingResults 
+    unit_testing: UnitTestingResults
     
 @dataclass
 class ViolationReport:
@@ -185,7 +185,7 @@ class SeveritiesWithinFile:
             for severity in self.severities.values()
             for type_name, count in severity.get_top_n_error_types_and_counts_in_sev(top_n)
         ]
-        
+
         all_type_tuples.sort(key=lambda type_and_count: type_and_count[1], reverse=True)
         return all_type_tuples[:top_n]   
 
@@ -198,7 +198,7 @@ class CheckstyleSeveritiesWithinFile(SeveritiesWithinFile):
             "warning": CategoriesWithinSeverity(),
             "error": CategoriesWithinSeverity()
         }
-    
+
 @dataclass
 class PmdSeveritiesWithinFile(SeveritiesWithinFile):
     # initialize structure with severity keys for pmd
@@ -239,7 +239,7 @@ class ProcessedViolations:
     
     def file_bucket(self, file_name: str) -> SeveritiesWithinFile:
         return self.files.setdefault(file_name, self.severity_class())
-        
+
     def add_violation(
         self, 
         file_name: str, 
@@ -253,30 +253,39 @@ class ProcessedViolations:
         category_bucket = severity_bucket.categories.setdefault(category, TypesWithinCategory())
         type_bucket = category_bucket.types.setdefault(type_name, ViolationsWithinType())
         type_bucket.violations.append(violation)
-        
-        
+
     def get_top_n_error_types_and_counts_in_subm(self, top_n: int) -> list[tuple[str, int]]:
-    
+
         all_type_tuples = [
             (type_name, count)
             for file_data in self.files.values()
             for type_name, count in file_data.get_top_n_error_types_and_counts_in_file(top_n)
         ]
-        
+
         all_type_tuples.sort(key=lambda type_and_count: type_and_count[1], reverse=True)
         return all_type_tuples[:top_n]   
-        
+    
+def get_type_counts(violations: ProcessedViolations) -> dict[str, int]:
+    counts = Counter()
+    for file_data in violations.files.values():
+        for sev in file_data.severities.values():
+            for cat in sev.categories.values():
+                for type_name, type_bucket in cat.types.items():
+                    counts[type_name] += type_bucket.get_error_count_within_type()
+    
+    return dict(counts)
+
 @dataclass
 class ProcessedJunitTests:
     all_tests: list[UnitTestCase]
     failed_tests: list[UnitTestCase]
-        
+
 @dataclass 
 class ProcessedSubmission:
     cs_processed: ProcessedViolations
     pmd_processed: ProcessedViolations
     junit_processed: ProcessedJunitTests
-    
+
 @dataclass
 class SubmissionData:
     upload_dir_name: str

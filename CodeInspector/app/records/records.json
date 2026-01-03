@@ -59,6 +59,88 @@
                     ]
                 ],
                 "top_pmd_errors": []
+            },
+            {
+                "counter": 2,
+                "loc": 34,
+                "error density": 0.007353,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": []
+            },
+            {
+                "counter": 3,
+                "loc": 34,
+                "error density": 0.007353,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": []
+            },
+            {
+                "counter": 4,
+                "loc": 34,
+                "error density": 0.007353,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": []
+            }
+        ],
+        "ludwig.scherer@enmu.edu": [
+            {
+                "counter": 1,
+                "loc": 34,
+                "error density": 0.007353,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": []
             }
         ]
     }

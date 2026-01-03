@@ -82,7 +82,7 @@ def _calculate_static_analysis_tool_score(
     for severity_class in tool_config:
         severity_weight_value = tool_config.get(severity_class, 0)
         total_errors_within_sev = 0
-   
+    
         # iterate over files in submission 
         for severity_data_within_file in processed_violations.files.values():
             # get severity data for current file

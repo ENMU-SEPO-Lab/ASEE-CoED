@@ -24,9 +24,15 @@ import app.grading.scoring as scorer
 import app.grading.percentiles as percentiler
 import app.grading.helpers as grading_helper
 import app.persistance.records as recorder
-from app.infrastructure.models import SubmissionData
+import app.persistance.error_counts as error_counter
+from app.infrastructure.models import SubmissionData, ProcessedSubmission
 
-def run_pipeline(checkstyle_xml, pmd_xml, junit_txt, grading_config) -> SubmissionData:
+def run_pipeline(
+    checkstyle_xml, 
+    pmd_xml, 
+    junit_txt, 
+    grading_config
+) -> tuple[SubmissionData, ProcessedSubmission]:
     
     try:
         upload_dir = get_upload_dir_path()
@@ -88,7 +94,7 @@ def run_pipeline(checkstyle_xml, pmd_xml, junit_txt, grading_config) -> Submissi
     
     # TODO: report creation and data persistence
     
-    return submission_scores
+    return (submission_scores, processed_data)
     
 if __name__ == "__main__":
     
@@ -106,9 +112,19 @@ if __name__ == "__main__":
         
     print("Test files read successfully")
     
-    submission_data = run_pipeline(checkstyle_xml, pmd_xml, junit_txt, grading_config)
+    submission_data, processed_submission = run_pipeline(
+        checkstyle_xml, 
+        pmd_xml, 
+        junit_txt, 
+        grading_config
+    )
     
     # update persistance files
-    recorder.update_json(RECORDS_JSON_FILE, submission_data)
+    recorder.update_json(submission_data, RECORDS_JSON_FILE)
+    error_counter.update_csv_files(
+        processed_submission, 
+        CS_ERROR_DATA_CSV, 
+        PMD_ERROR_DATA_CSV,
+        submission_data.email)
     
     print(submission_data)
