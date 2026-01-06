@@ -1,10 +1,9 @@
 TODO:
 
-- Report creation (info file for Gen-AI)
+- Abort pipeline if criteria not met (e.g. no author, no upload dir)
 - Runtime score metrics and calculation
-
 
 Future objectives:
 
 - API implementation
-- Exposure to web
+- Exposure to web address

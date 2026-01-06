@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
-from typing import TypeAlias
+from typing import TypeAlias, ClassVar
 from collections import Counter
-    
+from collections.abc import Iterable
+
 @dataclass
 class CheckstyleViolation:
     file_name: str
@@ -58,14 +59,20 @@ class CombinedParsedViolations:
     checkstyle: list[CheckstyleViolation]
     pmd: list[PmdViolation]
     unit_testing: UnitTestingResults
-    
-@dataclass
-class ViolationReport:
-    system: str
-    student_name: str
-    check_date: str
-    lines_of_code: int
-    violations: CombinedParsedViolations
+
+def aggregate_counters(counters: Iterable[Counter]) -> Counter:
+    """aggregate multiple Counter objects into one.
+
+    Args:
+        counters (Iterable[Counter]): iterable object containing counters
+
+    Returns:
+        Counter: the counter containing the result of the aggregation
+    """
+    total = Counter()
+    for counter in counters:
+        total += counter
+    return total
 
 # a violation can be either of type Checkstyle or PMD
 Violation: TypeAlias = CheckstyleViolation | PmdViolation
@@ -75,8 +82,8 @@ class ViolationsWithinType:
     # each error type can occur multiple times
     violations: list[Violation] = field(default_factory=list)
     
-    def get_error_count_within_type(self) -> int:
-        # get total error count within type
+    def get_error_count_in_type(self) -> int:
+        """Gets the total error count within type"""
         return len(self.violations)
         
 @dataclass
@@ -84,34 +91,34 @@ class TypesWithinCategory:
     # one category class can have multiple subtypes
     # type_name: str -> type_structure
     types: dict[str, ViolationsWithinType] = field(default_factory=dict)
-    
-    def get_error_count_within_cat(self) -> int:
-        # get total error count within category
-        return sum(
-            t.get_error_count_within_type()
-            for t in self.types.values()
-        )
-    
-    def get_most_common_error_type_and_count(self) -> tuple[str, int]:
-        if not self.types:
-            return ("None", 0) 
+     
+    def get_type_counts_in_cat(self) -> Counter:
+        """Gets the number of errors of each type within a category.
+
+        Returns:
+            Counter: items of form (type_name: str -> error_count: int)
+        """
+        counts = Counter({
+            type_name: type_data.get_error_count_in_type() 
+            for type_name, type_data in self.types.items()
+        })
         
-        return max(
-                (
-                    (type_name, type_class.get_error_count_within_type())
-                    for type_name, type_class in self.types.items()
-                ),
-                key=lambda type_and_count: type_and_count[1]
-            )  
+        return counts
     
-    def get_top_n_error_types_and_counts_in_cat(self, top_n: int) -> list[tuple[str, int]]:
-        sorted_by_count_list = sorted(
-            ((name, error_type.get_error_count_within_type())
-             for name, error_type in self.types.items()),
-            key=lambda type_and_count: type_and_count[1],
-            reverse=True # sort in descending order by count value
-        )
-        return sorted_by_count_list[:top_n] # slice the first top_n tuples from the list an return them
+    def get_error_count_in_cat(self) -> int:
+        """Gets the total error count within category"""
+        return self.get_type_counts_in_cat().total()
+    
+    def get_top_n_types_and_counts_in_cat(self, top_n: int) -> list[tuple[str, int]]:
+        """Gets the top_n error types by count within a category
+
+        Args:
+            top_n (int): the desired top_n number (how many elements the return list should have)
+
+        Returns:
+            list[tuple[str, int]]: list[(type_name, error_count),...] with top_n elements if that many error types exist
+        """
+        return self.get_type_counts_in_cat().most_common(top_n)
     
 @dataclass
 class CategoriesWithinSeverity:
@@ -119,97 +126,138 @@ class CategoriesWithinSeverity:
     # category_name: str -> category_structure 
     categories: dict[str, TypesWithinCategory] = field(default_factory=dict)
     
-    def get_error_count_within_sev(self) -> int:
-        """get total error count within severity class
+    def get_cat_counts_in_sev(self) -> Counter:
+        """Gets the number of errors of each category within a severity
 
         Returns:
-            int: the number of errors
+            Counter: items of form (cat_name: str -> error_count: int)
         """
-        return sum(
-            category.get_error_count_within_cat()
-            for category in self.categories.values()
+        counts = Counter({
+            cat_name: cat_data.get_error_count_in_cat()
+            for cat_name, cat_data in self.categories.items()
+        })
+        
+        return counts
+    
+    def get_type_counts_in_sev(self) -> Counter:
+        """Gets the number of errors of each type within a severity.
+
+        Returns:
+            Counter: items of form (type_name: str -> error_count: int)
+        """
+        return aggregate_counters(
+            cat.get_type_counts_in_cat()
+            for cat in self.categories.values()
         )
         
-    def get_most_common_error_category_and_count(self) -> tuple[str, int]:
-        if not self.categories:
-            return ("None", 0) 
-        
-        return max(
-                (
-                    (category_name, category_class.get_error_count_within_cat())
-                    for category_name, category_class in self.categories.items()
-                ),
-                key=lambda category_and_count: category_and_count[1]
-            )
-        
+    def get_error_count_in_sev(self) -> int:
+        """Gets the total error count within severity"""
+        return self.get_cat_counts_in_sev().total()
+    
     def get_top_n_error_types_and_counts_in_sev(self, top_n: int) -> list[tuple[str, int]]:
-        
-        all_type_tuples = [
-            (type_name, count)
-            for category in self.categories.values()
-            for type_name, count in category.get_top_n_error_types_and_counts_in_cat(top_n)
-        ]
-        
-        all_type_tuples.sort(key=lambda type_and_count: type_and_count[1], reverse=True)
-        return all_type_tuples[:top_n]
+        """Gets the top_n error types by count within a severity
+
+        Args:
+            top_n (int): the desired top_n number (how many elements the return list should have)
+
+        Returns:
+            list[tuple[str, int]]: list[(type_name, type_count),...] with top_n elements if that many error types exist
+        """
+        return self.get_type_counts_in_sev().most_common(top_n)
     
 @dataclass
 class SeveritiesWithinFile:
+    SEV_TEMPLATE: ClassVar[dict[str, type[CategoriesWithinSeverity]]] = {}
+    
     # one file can contain errors of multiple severity classes (checkstyle: 3, pmd: 5)
     # severity_name: str -> severity_structure 
-    severities: dict[str, CategoriesWithinSeverity] = field(default_factory=dict)
+    severities: dict[str, CategoriesWithinSeverity] = field(init=False)
     
-    def get_error_count_within_file(self) -> int:
-        # get total error count within file
-        return sum(
-            severity.get_error_count_within_sev()
-            for severity in self.severities.values()
-        )
+    def __post_init__(self):
+        self.severities = {key: cls() for key, cls in self.SEV_TEMPLATE.items()}
         
-    def get_most_common_severity(self) -> tuple[str, int]:
-        if not self.severities:
-            return ("None", 0)
+    def get_type_counts_per_severity_in_file(self) -> dict[str, Counter]:
+        """gets the error type counts of every type encountered, within each severity of the file
 
-        return max(
-            (
-                (severity_name, severity_class.get_error_count_within_sev()) 
-                for severity_name, severity_class in self.severities.items()
-            ),
-            key=lambda severity_and_count: severity_and_count[1]
-        )
+        Returns:
+            dict[str, Counter]: (severity_name: str, Counter[type_name: str, error_count: int])
+        """
+        type_counts_in_severities = {}
         
+        for severity in self.SEV_TEMPLATE.keys():
+            type_counts_in_severities[severity] = self.severities[severity].get_type_counts_in_sev()
+        
+        return type_counts_in_severities
+    
+    def get_sev_counts_in_file(self) -> Counter:
+        """Gets the number of errors of each severit within a file
+
+        Returns:
+            Counter: items of form (sev_name: str -> error_count: int)
+        """
+        counts = Counter({
+            sev_name: sev_data.get_error_count_in_sev()
+            for sev_name, sev_data in self.severities.items()
+        })
+        
+        return counts
+    
+    def get_type_counts_in_file(self) -> Counter:
+        """Gets the number of errors of each type within a file.
+
+        Returns:
+            Counter: items of form (type_name: str -> error_count: int)
+        """
+        return aggregate_counters(
+            sev.get_type_counts_in_sev()
+            for sev in self.severities.values()
+        )
+    
+    def get_error_count_in_file(self) -> int:
+        """Gets the total error count within file"""
+        return self.get_sev_counts_in_file().total()
+    
     def get_top_n_error_types_and_counts_in_file(self, top_n: int) -> list[tuple[str, int]]:
-    
-        all_type_tuples = [
-            (type_name, count)
-            for severity in self.severities.values()
-            for type_name, count in severity.get_top_n_error_types_and_counts_in_sev(top_n)
-        ]
+        """Gets the top_n error types by count within a file
 
-        all_type_tuples.sort(key=lambda type_and_count: type_and_count[1], reverse=True)
-        return all_type_tuples[:top_n]   
+        Args:
+            top_n (int): the desired top_n number (how many elements the return list should have)
+
+        Returns:
+            list[tuple[str, int]]: list[(type_name, type_count),...] with top_n elements if that many error types exist
+        """
+        return self.get_type_counts_in_file().most_common(top_n)
 
 @dataclass
 class CheckstyleSeveritiesWithinFile(SeveritiesWithinFile):
-    # initialize structure with severity keys for checkstyle
-    def __post_init__(self):
-        self.severities = {
-            "info": CategoriesWithinSeverity(),
-            "warning": CategoriesWithinSeverity(),
-            "error": CategoriesWithinSeverity()
-        }
+    
+    SEV_TEMPLATE = {
+        "info": CategoriesWithinSeverity,
+        "warning": CategoriesWithinSeverity,
+        "error": CategoriesWithinSeverity
+    }
 
 @dataclass
 class PmdSeveritiesWithinFile(SeveritiesWithinFile):
-    # initialize structure with severity keys for pmd
-    def __post_init__(self):
-        self.severities = {
-            "5": CategoriesWithinSeverity(),
-            "4": CategoriesWithinSeverity(),
-            "3": CategoriesWithinSeverity(),
-            "2": CategoriesWithinSeverity(),
-            "1": CategoriesWithinSeverity()
-        }
+    
+    SEV_TEMPLATE = {
+        "5": CategoriesWithinSeverity,
+        "4": CategoriesWithinSeverity,
+        "3": CategoriesWithinSeverity,
+        "2": CategoriesWithinSeverity,
+        "1": CategoriesWithinSeverity
+    }
+    
+def severity_key_count(cls: type[SeveritiesWithinFile]) -> int:
+    """Gets the specific number of severities for a given SeveritiesWithinFile class
+
+    Args:
+        cls (type[SeveritiesWithinFile]): the specific class
+
+    Returns:
+        int: the number of severities associated with the class
+    """
+    return len(cls.SEV_TEMPLATE)
 
 @dataclass
 class ProcessedViolations:
@@ -217,29 +265,95 @@ class ProcessedViolations:
     # file_name -> file_datastructure
     severity_class: type[SeveritiesWithinFile] # CheckstyleSeveritiesWithinFile or PmdSeveritiesWithinFile
     files: dict[str, SeveritiesWithinFile] = field(default_factory=dict)
-    
-    def get_error_count_within_submission(self) -> int:
-        # get total error count within submission
-        return sum(
-            file_data.get_error_count_within_file()
-            for file_data in self.files.values()
+        
+    def get_type_counts_in_submission(self) -> Counter:
+        """Gets the number of errors of each type within a submission.
+
+        Returns:
+            Counter: items of form (type_name: str -> error_count: int)
+        """
+        return aggregate_counters(
+            file.get_type_counts_in_file()
+            for file in self.files.values()
         )
         
-    def get_file_with_most_errors(self) -> tuple[str, int]:
-        if not self.files:
-            return ("None", 0)
+    def get_type_counts_per_severity_in_submission(self) -> dict[str, Counter]:
+        """gets the error type counts of every type encountered, within each severity of the submission
 
-        return max(
-            (
-                (file_name, file_data.get_error_count_within_file()) 
-                for file_name, file_data in self.files.items()
-            ),
-            key=lambda file_and_count: file_and_count[1]
-        )
+        Returns:
+            dict[str, Counter]: (severity_name: str, Counter[type_name: str, error_count: int])
+        """
+        counts_in_submission = {sev: Counter() for sev in self.severity_class.SEV_TEMPLATE.keys()}
+        
+        for file_data in self.files.values():
+            counts_in_single_file = file_data.get_type_counts_per_severity_in_file()
+            for sev, sev_counter in counts_in_single_file.items():
+                counts_in_submission[sev] += sev_counter
+        
+        return counts_in_submission
     
+    def get_file_counts_in_submission(self) -> Counter:
+        """Gets the number of errors in each file within the submission
+
+        Returns:
+            Counter: items of form (file_name: str -> error_count: int)
+        """
+        counts = Counter({
+            file_name: file_data.get_error_count_in_file()
+            for file_name, file_data in self.files.items()
+        })
+        
+        return counts
+    
+    def get_error_count_within_submission(self) -> int:
+        """Gets the total error count within submission"""
+        return self.get_file_counts_in_submission().total()
+    
+    def get_severity_counts(self) -> Counter:
+        """Gets the number of errors within each severity class across the submission
+
+        Returns:
+            Counter: items of form (sev_name: str -> error_count: int)
+        """
+        counts = Counter({
+            severity_name: 0 
+            for severity_name in self.severity_class.SEV_TEMPLATE.keys()
+        })
+        
+        for file_data in self.files.values():
+            for sev_name, sev_data in file_data.severities.items():
+                counts[sev_name] += sev_data.get_error_count_in_sev()
+        
+        return counts
+                
+    def get_severity_ratios(self) -> list[float]:
+        """Gets the ratio in % of each severity class relative to the total error count 
+
+        Returns:
+            list[float]: index 0 is the ratio of the lowest sev class, last one is the highest
+            if total doesn't exist, the ratio defaults to 0%
+        """
+        counts = self.get_severity_counts()
+        total = counts.total()
+        return {
+            sev: (counts[sev] / total * 100.0) if total else 0.0 
+            for sev in self.severity_class.SEV_TEMPLATE.keys()
+        }
+    
+    def get_top_n_error_types_and_counts_in_subm(self, top_n: int) -> list[tuple[str, int]]:
+        """Gets the top_n error types by count within a submission
+
+        Args:
+            top_n (int): the desired top_n number (how many elements the return list should have)
+
+        Returns:
+            list[tuple[str, int]]: list[(type_name, type_count),...] with top_n elements if that many error types exist
+        """
+        return self.get_type_counts_in_submission().most_common(top_n)
+        
     def file_bucket(self, file_name: str) -> SeveritiesWithinFile:
         return self.files.setdefault(file_name, self.severity_class())
-
+    
     def add_violation(
         self, 
         file_name: str, 
@@ -254,27 +368,6 @@ class ProcessedViolations:
         type_bucket = category_bucket.types.setdefault(type_name, ViolationsWithinType())
         type_bucket.violations.append(violation)
 
-    def get_top_n_error_types_and_counts_in_subm(self, top_n: int) -> list[tuple[str, int]]:
-
-        all_type_tuples = [
-            (type_name, count)
-            for file_data in self.files.values()
-            for type_name, count in file_data.get_top_n_error_types_and_counts_in_file(top_n)
-        ]
-
-        all_type_tuples.sort(key=lambda type_and_count: type_and_count[1], reverse=True)
-        return all_type_tuples[:top_n]   
-    
-def get_type_counts(violations: ProcessedViolations) -> dict[str, int]:
-    counts = Counter()
-    for file_data in violations.files.values():
-        for sev in file_data.severities.values():
-            for cat in sev.categories.values():
-                for type_name, type_bucket in cat.types.items():
-                    counts[type_name] += type_bucket.get_error_count_within_type()
-    
-    return dict(counts)
-
 @dataclass
 class ProcessedJunitTests:
     all_tests: list[UnitTestCase]
@@ -288,14 +381,20 @@ class ProcessedSubmission:
 
 @dataclass
 class SubmissionData:
+    date: str
     upload_dir_name: str
     email: str
     loc: int
     cs_score: int
     cs_weighted_error: float
+    cs_violation_count: int
+    cs_sev_counts: Counter
     pmd_score: int
     pmd_weighted_error: float
-    junit_success_ratio: float
+    pmd_violation_count: int
+    pmd_sev_counts: Counter
+    junit_test_count: int
+    junit_failed_count: int
     coding_std_score: int
     req_score: int
     overall_score: int

@@ -17,7 +17,7 @@ def get_global_percentile_score(
         total_error_density (float): overall error density of the file
 
     Returns:
-        tuple: (checkstyle percentile score, pmd percentile score, overall percentile score)
+        tuple: (cs percentile score, pmd percentile score, overall percentile score)
     """
     cs_data = data["cs_density"].to_numpy()
     pmd_data = data["pmd_density"].to_numpy()

@@ -1,19 +1,5 @@
-from app.infrastructure.models import CombinedParsedViolations, ViolationReport
 from pathlib import Path
 from datetime import datetime
-import os
-
-def build_violation_report(student_email: str, check_date: str, loc: int, parsed: CombinedParsedViolations) -> ViolationReport:
-    
-    report = ViolationReport(
-        system = "CodeInspector",
-        student_name = student_email,
-        check_date = check_date,
-        lines_of_code = loc,
-        violations = parsed
-    )
-    
-    return report
 
 def check_date() -> str:
     
@@ -24,9 +10,8 @@ def check_date() -> str:
 def create_grading_dir(dir_path: Path | str):
     
     grading_dir_path = Path(dir_path)
-    os.makedirs(grading_dir_path, exist_ok=True)
+    grading_dir_path.mkdir(exist_ok=True)
     
-def create_grading_rep_file_name(dir_path: Path | str, date: str) -> str:
+def create_grading_rep_file_name(dir_path: Path | str, date: str) -> Path:
     
-    grade_report_dir = Path(dir_path)
-    return os.path.join(grade_report_dir, f"{date}.txt")
+    return Path(dir_path) / f"{date}.txt"

@@ -23,6 +23,7 @@ import app.parsing.parser as parser
 import app.grading.scoring as scorer
 import app.grading.percentiles as percentiler
 import app.grading.helpers as grading_helper
+import app.grading.reports as report_creator
 import app.persistance.records as recorder
 import app.persistance.error_counts as error_counter
 from app.infrastructure.models import SubmissionData, ProcessedSubmission
@@ -48,18 +49,19 @@ def run_pipeline(
     
     print(f"student email: {student_email}")
     
-    violation_report = transf_helper.build_violation_report(student_email, check_date, loc, parsed)
+    # violation_report = transf_helper.build_violation_report(student_email, check_date, loc, parsed)
     
     # process the parsed data to prepare for score evaluation
-    processed_data = aggregator.process_submission_data(parsed)
+    processed_submission = aggregator.process_submission_data(parsed)
     
     transf_helper.create_grading_dir(GRADE_REPORTS_DIR)
-    grade_report_file_name = transf_helper.create_grading_rep_file_name(GRADE_REPORTS_DIR, check_date)
+    grade_report_file_path = transf_helper.create_grading_rep_file_name(GRADE_REPORTS_DIR, check_date)
     
     # evaluate the submission
-    submission_scores = scorer.evaluate_submission(
+    submission_data = scorer.evaluate_submission(
+        check_date,
         student_email, 
-        processed_data, 
+        processed_submission, 
         loc, 
         grading_config, 
         upload_dir
@@ -67,7 +69,7 @@ def run_pipeline(
     
     grading_helper.ensure_json_file(RECORDS_JSON_FILE) # make sure records.json exists
     records = grading_helper.load_json(RECORDS_JSON_FILE)
-    weighted_error = submission_scores.overall_weighted_error
+    weighted_error = submission_data.overall_weighted_error
     
     if records:
         percentiles_self = percentiler.compare_score_with_self(
@@ -82,8 +84,8 @@ def run_pipeline(
     
     if not weighted_csv_data.empty:
         percentiles_global = percentiler.get_global_percentile_score(
-            submission_scores.cs_weighted_error,
-            submission_scores.pmd_weighted_error,
+            submission_data.cs_weighted_error,
+            submission_data.pmd_weighted_error,
             weighted_error,
             weighted_csv_data   
         )
@@ -92,9 +94,18 @@ def run_pipeline(
     print(percentiles_class)
     print(percentiles_global)
     
+    report_creator.create_grade_report(
+        submission_data, 
+        processed_submission,
+        percentiles_self, 
+        percentiles_class, 
+        percentiles_global,
+        grade_report_file_path
+    )
+    
     # TODO: report creation and data persistence
     
-    return (submission_scores, processed_data)
+    return (submission_data, processed_submission)
     
 if __name__ == "__main__":
     

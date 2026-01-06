@@ -1,7 +1,6 @@
 from app.infrastructure.models import (
     ProcessedSubmission,
     ProcessedViolations,
-    get_type_counts
 )
 from pathlib import Path
 import pandas as pd
@@ -27,7 +26,7 @@ def update_csv_files(
 def _update_csv(violations: ProcessedViolations, csv_path: Path, email: str) -> None:
     df = _load_and_prep_data(csv_path, email)
     
-    type_counts = get_type_counts(violations)
+    type_counts = violations.get_type_counts_in_submission()
     
     for type_name, type_count in type_counts.items():
         _ensure_column(df, type_name)
