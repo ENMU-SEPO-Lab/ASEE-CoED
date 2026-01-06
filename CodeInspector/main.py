@@ -29,11 +29,22 @@ import app.persistance.error_counts as error_counter
 from app.infrastructure.models import SubmissionData, ProcessedSubmission
 
 def run_pipeline(
-    checkstyle_xml, 
-    pmd_xml, 
-    junit_txt, 
-    grading_config
+    checkstyle_xml: str, 
+    pmd_xml: str, 
+    junit_txt: str, 
+    grading_config: dict
 ) -> tuple[SubmissionData, ProcessedSubmission]:
+    """The pipeline
+
+    Args:
+        checkstyle_xml (str): checkstyle test result file
+        pmd_xml (str): pmd test result file
+        junit_txt (str): junit test result file
+        grading_config (dict): grading_config.json contents
+
+    Returns:
+        tuple[SubmissionData, ProcessedSubmission]: Data to be extracted and stored in csv and json record files
+    """
     
     try:
         upload_dir = get_upload_dir_path()
@@ -41,21 +52,19 @@ def run_pipeline(
         # TODO: abort pipeline
         raise
     
+    # send xml files to parser logic and receive CombinedParsedViolations object
     parsed = parser.parse_and_combine_test_files(checkstyle_xml, pmd_xml, junit_txt)
             
     check_date = transf_helper.check_date() # get current date and format it    
     loc = line_counter.count_loc_in_dir(upload_dir) # count the lines of code detected in the submission dir
-    student_email = validator.extract_author_from_submission(upload_dir)
-    
-    print(f"student email: {student_email}")
-    
-    # violation_report = transf_helper.build_violation_report(student_email, check_date, loc, parsed)
+    student_email = validator.extract_author_from_submission(upload_dir) # get student email
     
     # process the parsed data to prepare for score evaluation
     processed_submission = aggregator.process_submission_data(parsed)
     
-    transf_helper.create_grading_dir(GRADE_REPORTS_DIR)
-    grade_report_file_path = transf_helper.create_grading_rep_file_name(GRADE_REPORTS_DIR, check_date)
+    transf_helper.create_grading_dir(GRADE_REPORTS_DIR) # make sure dir for grade report exists
+    # create grade_report_file name
+    grade_report_file_path = transf_helper.create_grading_rep_file_name(GRADE_REPORTS_DIR, check_date) 
     
     # evaluate the submission
     submission_data = scorer.evaluate_submission(
@@ -69,12 +78,14 @@ def run_pipeline(
     
     grading_helper.ensure_json_file(RECORDS_JSON_FILE) # make sure records.json exists
     records = grading_helper.load_json(RECORDS_JSON_FILE)
-    weighted_error = submission_data.overall_weighted_error
+    weighted_error = submission_data.overall_weighted_error 
     
     if records:
+        # relative to current semester submissions
         percentiles_self = percentiler.compare_score_with_self(
             student_email, weighted_error, upload_dir, records
         )
+        # relative to current semester submissions
         percentiles_class = percentiler.compare_score_with_class(
             weighted_error, upload_dir, records
         )
@@ -83,17 +94,15 @@ def run_pipeline(
     weighted_csv_data = grading_helper.load_weighted_data_csv(WEIGHTED_DATA_CSV)
     
     if not weighted_csv_data.empty:
+        # relative to historical weighted dataset by previously taught course
         percentiles_global = percentiler.get_global_percentile_score(
             submission_data.cs_weighted_error,
             submission_data.pmd_weighted_error,
             weighted_error,
             weighted_csv_data   
         )
-        
-    print(percentiles_self)
-    print(percentiles_class)
-    print(percentiles_global)
     
+    # send data to grade report creation logic
     report_creator.create_grade_report(
         submission_data, 
         processed_submission,
@@ -103,8 +112,7 @@ def run_pipeline(
         grade_report_file_path
     )
     
-    # TODO: report creation and data persistence
-    
+    # return data to main method for persistence file updates
     return (submission_data, processed_submission)
     
 if __name__ == "__main__":
@@ -123,6 +131,7 @@ if __name__ == "__main__":
         
     print("Test files read successfully")
     
+    # run the pipeline
     submission_data, processed_submission = run_pipeline(
         checkstyle_xml, 
         pmd_xml, 
@@ -130,7 +139,7 @@ if __name__ == "__main__":
         grading_config
     )
     
-    # update persistance files
+    # update persistance files after pipeline finished
     recorder.update_json(submission_data, RECORDS_JSON_FILE)
     error_counter.update_csv_files(
         processed_submission, 
@@ -138,4 +147,4 @@ if __name__ == "__main__":
         PMD_ERROR_DATA_CSV,
         submission_data.email)
     
-    print(submission_data)
+    # print(submission_data) # debugging

@@ -17,7 +17,7 @@ def get_global_percentile_score(
         total_error_density (float): overall error density of the file
 
     Returns:
-        tuple: (cs percentile score, pmd percentile score, overall percentile score)
+        tuple[float, float, float]: [cs percentile score, pmd percentile score, overall percentile score]
     """
     cs_data = data["cs_density"].to_numpy()
     pmd_data = data["pmd_density"].to_numpy()
@@ -34,7 +34,19 @@ def compare_score_with_self(
     error_density: float, 
     upload_dir: Path | str, 
     records: dict
-) -> tuple[float, float]:
+) -> tuple[float, float, float]:
+    """Compares the score of the current submission to submissions made by 
+    the student for the same assignment
+
+    Args:
+        student_email (str): student email
+        error_density (float): overall weighted error density of submission
+        upload_dir (Path | str): upload_dir path
+        records (dict): records.json contents
+
+    Returns:
+        tuple[float, float, float]: [average_error_density, density_of_last_submission, relative_change]
+    """
     
     assignment_dir = upload_dir.name
     assignment_data = records.get(assignment_dir, {})
@@ -59,24 +71,28 @@ def compare_score_with_self(
     
     # average recorded error density across all submissions the student made for this assignment
     average_error_density = round(sum(error_density_list) / len(error_density_list), 4)
-    # reltive change compared to the last submission
-    relative_change = round(error_density / error_density_list[(len(error_density_list) - 2)], 4) * 100
+    # relative change compared to the last submission
+    density_of_last_submission = error_density_list[(len(error_density_list) - 1)]
+    relative_change = round(error_density / density_of_last_submission, 4) * 100
     
-    print(
-        f"\n{'=' * 30}",
-        f"\nYour average error density for this assignment is: {average_error_density}",
-        f"\nThe error density of this submission is {relative_change}% of your last submission.",
-        f"\n{'=' * 30}"
-    )
-    
-    return average_error_density, relative_change
+    return average_error_density, density_of_last_submission, relative_change
 
 def compare_score_with_class(
     error_density: float, 
     upload_dir: Path | str,
     records: dict
 ) -> tuple[float, float]:
-    
+    """Compares the score of the current submission to submissions made by 
+    all other class members for the same assignment
+
+    Args:
+        error_density (float): overall weighted error density of submission
+        upload_dir (Path | str): upload_dir path
+        records (dict): records.json contents
+
+    Returns:
+        tuple[float, float, str]: [average_assignment_error, score_relative_to_class, comparator]
+    """
     assignment_dir = upload_dir.name
     assignment_data = records.get(assignment_dir, {})
     
@@ -108,7 +124,7 @@ def compare_score_with_class(
     # compare the score of the current submission to the overall average
     score_relative_to_class = round(error_density / average_assignment_error, 4)
     
-    # change output variables based on whether the errordensity is higher or lower
+    # change output variables based on whether the error density is higher or lower
     if score_relative_to_class < 1:
         percent_value = (1 - score_relative_to_class) * 100
         comparator = "lower"
@@ -116,12 +132,5 @@ def compare_score_with_class(
         percent_value = (score_relative_to_class - 1) * 100
         comparator = "higher"
     
-    print(
-        f"\n{'=' * 30}"
-        f"\nThe average error density of the class for this assignment is: {average_assignment_error}",
-        f"\nYour error density was {round(percent_value, 2)}% {comparator} than the class average.",
-        f"\n{'=' * 30}"
-    )
-    
-    return average_assignment_error, score_relative_to_class
+    return average_assignment_error, percent_value, comparator
     

@@ -51,8 +51,10 @@ def create_grade_report(
     # generate pmd lines and stats
     pmd_lines = generate_pmd_output(pmd_processed, submission_data)
     
-    # get percentile scores
+    # extract percentile scores from tuples
     checkstyle_percentile, pmd_percentile, overall_percentile = percentiles_global
+    average_error_dens_self, density_of_last_submission, relative_change_to_self = percentiles_self
+    average_assignment_error_class, relative_change_to_class, comparator_string = percentiles_class
     
     # add checkstyle stats to checkstyle lines 
     cs_lines.append(
@@ -73,7 +75,14 @@ def create_grade_report(
         f"\n\nSUMMARY  {'-' * 40}\n",
         f"\nThe cumulative weighted error density of this submission is: {round(total_weighted_density, 5)}.",
         f"\nThis ranks in the: {overall_percentile}th percentile.",
-        f"\nThat is, {100 - overall_percentile}% of the average student submission have a higher error density than this."
+        f"\nThat is, historically, {100 - overall_percentile}% of the average student submission of previous semesters had a higher error density than this.",
+        f"\n{'-' * 40}",
+        f"\nThe average error density of the student for this assignment is: {average_error_dens_self}",
+        f"\nThe last submission by this student for this assignment had a weighted density of: {density_of_last_submission}",
+        f"\nThe error density of this submission is {relative_change_to_self}% of the last submission.",
+        f"\n{'-' * 40}",
+        f"\nThe average error density of the class for this assignment is: {average_assignment_error_class}",
+        f"\nThe error density of this submission was {round(relative_change_to_class, 2)}% {comparator_string} than the class average.",
     ]
     
     # generate unit testing lines
@@ -185,10 +194,10 @@ def generate_score_output(requirements_score, runtime_score, coding_stand_score)
             f"\n{'=' * 35}  FINAL SCORE   {'=' * 45}",
             f"\n    - Requirements: {requirements_score}",
             f"\n    - Coding Standards: {coding_stand_score}",
-            f"\n    - Runtime: {runtime_score}",
-            f"\n    - Efficieny: TBD",
+            f"\n    - Runtime: TBD", # need dynamically -> GenAI
+            f"\n    - Efficieny: TBD", # need dynamically -> GenAI
             f"\n{'=' * 100}",
-            f"\n    - Overall: {requirements_score + runtime_score + coding_stand_score}",
+            f"\n    - Overall: {requirements_score + coding_stand_score}",
             f"\n{'=' * 45} END REPORT {'=' * 45}"
         ]
     return student_score_output

@@ -9,7 +9,6 @@ def parse_checkstyle(xml_text: str) -> list[CheckstyleViolation]:
         for file_element in root.findall('file'):
  
             for error in file_element.findall('error'):
-                
                 source = error.attrib.get("source", "")
                 parts = source.split(".")
                 # split the string to get second to last part, i.e the violation category if existent

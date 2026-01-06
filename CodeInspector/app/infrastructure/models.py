@@ -258,7 +258,7 @@ def severity_key_count(cls: type[SeveritiesWithinFile]) -> int:
         int: the number of severities associated with the class
     """
     return len(cls.SEV_TEMPLATE)
-
+# file -> severity -> category -> type -> count
 @dataclass
 class ProcessedViolations:
     # one submission can contain multiple files.
@@ -372,6 +372,27 @@ class ProcessedViolations:
 class ProcessedJunitTests:
     all_tests: list[UnitTestCase]
     failed_tests: list[UnitTestCase]
+    
+    """
+    
+    -file_name
+        |
+        "info"
+            |
+            cat_1
+                |
+                type_1 -> # of occurrences
+                |
+                type_2 -> # of occurrences
+            |   
+            cat_2
+        |
+        "warning"
+        |
+        "error"
+    
+    
+    """
 
 @dataclass 
 class ProcessedSubmission:
