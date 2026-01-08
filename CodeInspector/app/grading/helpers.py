@@ -36,9 +36,25 @@ def load_json(file_path: Path | str) -> dict:
     return data
 
 def check_for_weighted_data_csv(csv_path: Path | str) -> bool:
+    """Check if the file for the path exists
+
+    Args:
+        csv_path (Path | str): the path
+
+    Returns:
+        bool: whether the file exists at the provided path
+    """
     weighted_csv_path = Path(csv_path)
     return weighted_csv_path.exists()
 
 def load_weighted_data_csv(csv_path: Path | str) -> DataFrame:
+    """load csv data from the provided file into a pandas DataFrame
+
+    Args:
+        csv_path (Path | str): the path of the csv file
+
+    Returns:
+        DataFrame: the csv data
+    """
     weighted_csv_path = Path(csv_path)
     return read_csv(weighted_csv_path, header=0)

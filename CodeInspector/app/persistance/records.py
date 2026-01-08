@@ -6,7 +6,13 @@ def update_json (
     submission_data: SubmissionData,
     records_file_path: Path | str
 ) -> None:
+    """updates the records.json file containing submission metrics data
+    File existence and format check needs to be made before calling this
 
+    Args:
+        submission_data (SubmissionData): submission data
+        records_file_path (Path | str): the json file path
+    """
     file_path = Path(records_file_path)
     upload_dir_name = submission_data.upload_dir_name
     student_email = submission_data.email
@@ -17,6 +23,7 @@ def update_json (
     
     try:
         with open(file_path, 'r+') as file:
+            # load json file
             content = file.read().strip()
             if content:
                 data = json.loads(content)

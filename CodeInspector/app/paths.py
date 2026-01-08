@@ -19,6 +19,14 @@ CS_ERROR_DATA_CSV = RECORDS_DIR / "cs_errors.csv"
 PMD_ERROR_DATA_CSV = RECORDS_DIR / "pmd_errors.csv"
 
 def get_upload_dir_path() -> Path:
+    """extract the name of the upload directory name from the build.xml file
+
+    Raises:
+        ValueError: if xml has unexpected format
+
+    Returns:
+        Path: path of build.xml
+    """
     # load the build.xml file
     tree = ET.parse(BUILD_XML_PATH)
     root = tree.getroot()

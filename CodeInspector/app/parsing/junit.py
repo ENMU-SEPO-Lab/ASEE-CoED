@@ -6,8 +6,18 @@ from app.infrastructure.models import (
 )
 
 def parse_test_results(junit_txt: str) -> UnitTestingResults:
-    try:
+    """parses the junit test result txt file
 
+    Args:
+        junit_txt (str): junit result file content as String
+
+    Raises:
+        ValueError: if format invalid
+
+    Returns:
+        UnitTestingResults: structure containing the summary, list of testcases, and test_suite
+    """
+    try:
         current_test_case: UnitTestCase | None = None
         summary = UnitTestingSummary()
         result = UnitTestingResults(summary = summary, testcases = [], test_suite = "")

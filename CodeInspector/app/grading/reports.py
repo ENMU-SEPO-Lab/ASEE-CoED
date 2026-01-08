@@ -16,6 +16,16 @@ def create_grade_report(
     percentiles_global: tuple[float, float, float],
     grade_report_file_path: Path
 ):
+    """Assembles the grade report and writes it to a .txt file at the provided path
+
+    Args:
+        submission_data (SubmissionData): the data of the evaluated submission
+        processed_submission (ProcessedSubmission): the processed submission (need some info from this)
+        percentiles_self (tuple[float, float]): for feedback
+        percentiles_class (tuple[float, float]): for feedback
+        percentiles_global (tuple[float, float, float]): for feedback
+        grade_report_file_path (Path): the file path
+    """
     # extract data
     student_email = submission_data.email
     report_date = submission_data.date
@@ -111,7 +121,15 @@ def create_grade_report(
     #     print(f"Failed to generate report: {e}")
 
 def generate_checkStyle_output(cs_processed: ProcessedViolations, submission_data: SubmissionData) -> list:
+    """generates the grade report lines of the CheckStyle section
 
+    Args:
+        cs_processed (ProcessedViolations): the CheckStyle violations
+        submission_data (SubmissionData): the data of the submission evaluation
+
+    Returns:
+        list: the output lines for the CheckStyle section of the report
+    """
     number_of_cs_violations = submission_data.cs_violation_count
     
     checkstyle_lines = [
@@ -140,6 +158,15 @@ def generate_checkStyle_output(cs_processed: ProcessedViolations, submission_dat
     return checkstyle_lines
 
 def generate_pmd_output(pmd_processed: ProcessedViolations, submission_data: SubmissionData) -> list:
+    """generates the grade report lines of the PMD section
+
+    Args:
+        pmd_processed (ProcessedViolations): the PMD violations
+        submission_data (SubmissionData): the data of the submission evaluation
+
+    Returns:
+        list: the output lines for the PMD section of the report
+    """
 
     number_of_pmd_violations = submission_data.pmd_violation_count
         
@@ -169,6 +196,14 @@ def generate_pmd_output(pmd_processed: ProcessedViolations, submission_data: Sub
     return pmd_lines
 
 def generate_unitTesting_output(junit_processed: ProcessedJunitTests) -> list:
+    """generates the grade report lines of the Junit section
+
+    Args:
+        junit_processed (ProcessedJunitTests): the processed Junit test data
+
+    Returns:
+        list: the output lines for the Junit section of the report
+    """
     failed_tests = junit_processed.failed_tests
     number_of_failures = len(failed_tests)
     number_of_tests = len(junit_processed.all_tests)

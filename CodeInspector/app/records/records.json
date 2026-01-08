@@ -326,6 +326,26 @@
                     ]
                 ],
                 "top_pmd_errors": []
+            },
+            {
+                "counter": 10,
+                "loc": 34,
+                "error density": 0.007353,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": []
             }
         ]
     }

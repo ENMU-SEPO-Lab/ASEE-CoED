@@ -261,8 +261,36 @@ def severity_key_count(cls: type[SeveritiesWithinFile]) -> int:
 # file -> severity -> category -> type -> count
 @dataclass
 class ProcessedViolations:
+    """
+    CheckStyle example:
+    
+    -file_name1
+        |
+        "info"
+            |
+            cat_1
+                |
+                type_1 -> # of occurrences
+                |
+                type_2 -> # of occurrences
+            |   
+            cat_2
+        |
+        "warning"
+        |
+        "error"
+    
+    -file_name2
+        |
+        "info"
+            ....
+        .
+        .
+        .
+        .
+    """
     # one submission can contain multiple files.
-    # file_name -> file_datastructure
+    # file_name -> file_datastructure holding the violations
     severity_class: type[SeveritiesWithinFile] # CheckstyleSeveritiesWithinFile or PmdSeveritiesWithinFile
     files: dict[str, SeveritiesWithinFile] = field(default_factory=dict)
         
@@ -352,6 +380,16 @@ class ProcessedViolations:
         return self.get_type_counts_in_submission().most_common(top_n)
         
     def file_bucket(self, file_name: str) -> SeveritiesWithinFile:
+        """makes sure the violation data structure associated with the given file name exists.
+        Either returns the existing SeveritiesWithinFile instance, or initializes one, mapped to
+        the provided file name
+
+        Args:
+            file_name (str): the file name
+
+        Returns:
+            SeveritiesWithinFile: the structure to store the violations encountered within the file
+        """
         return self.files.setdefault(file_name, self.severity_class())
     
     def add_violation(
@@ -362,6 +400,17 @@ class ProcessedViolations:
         type_name: str, 
         violation: Violation
     ) -> None:
+        """adds a violation to the structure. Both PMD and CheckStyle violations have their own instance of this.
+        Structural hierarchy as follows:
+                file_name -> severity -> category -> type
+
+        Args:
+            file_name (str): _description_
+            severity (str): _description_
+            category (str): _description_
+            type_name (str): _description_
+            violation (Violation): _description_
+        """
         file_bucket = self.file_bucket(file_name)
         severity_bucket = file_bucket.severities.setdefault(severity, CategoriesWithinSeverity())
         category_bucket = severity_bucket.categories.setdefault(category, TypesWithinCategory())
@@ -373,26 +422,7 @@ class ProcessedJunitTests:
     all_tests: list[UnitTestCase]
     failed_tests: list[UnitTestCase]
     
-    """
-    
-    -file_name
-        |
-        "info"
-            |
-            cat_1
-                |
-                type_1 -> # of occurrences
-                |
-                type_2 -> # of occurrences
-            |   
-            cat_2
-        |
-        "warning"
-        |
-        "error"
-    
-    
-    """
+
 
 @dataclass 
 class ProcessedSubmission:

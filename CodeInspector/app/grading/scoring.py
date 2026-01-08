@@ -14,6 +14,20 @@ def evaluate_submission(
     grading_config: dict,
     upload_dir: Path | str
 ) -> SubmissionData:
+    """evalutes the processed/sorted data. Calculates coding standard, and requirements score and creates
+    other metrics for the grade report and data records.
+
+    Args:
+        check_date (str): the date and time the submission was made
+        student_email (str): the email provided in the author tag of the submission
+        processed_data (ProcessedSubmission): the processed submission data
+        loc (int): Java lines of code found in the submission directory 
+        grading_config (dict): grading config data from JSON file
+        upload_dir (Path | str): the upload dir path, needed for Assignment name
+
+    Returns:
+        SubmissionData: the data of the evaluated submission
+    """
     
     coding_stds_dict = grading_config.get("criteria_ratings", {}).get("coding_standards", {})
     req_dict = grading_config.get("criteria_ratings", {}).get("requirements", {})
@@ -89,6 +103,18 @@ def _calculate_static_analysis_tool_score(
     coding_std_config: dict,
     tool_config: dict
 ) -> tuple[int, int]:
+    """calculates the score of either static analysis tool, based on the processed 
+    violation reports provided
+
+    Args:
+        processed_violations (ProcessedViolations): processed violations (CheckStyle or PMD)
+        loc (int): lines of code in the submission
+        coding_std_config (dict): grading config data for scoring purposes
+        tool_config (dict): tool specific config data (CheckStyle or PMD)
+
+    Returns:
+        tuple[int, int]: [final_score, tool_specific_weighted_error_density]
+    """
     
     max_score = coding_std_config.get("excellent", 0)
     min_score = coding_std_config.get("unsatisfactory", 0)
@@ -96,7 +122,12 @@ def _calculate_static_analysis_tool_score(
     total_penalty = 0
     weighted_error_density = 0
 
+    # the grading algorithm
+    
+    # collect violation count across each severity class individually, so that the weight can 
+    # be applied after each iteration
     for severity_class in tool_config:
+        # the weight to be applied once all violations of this severity have been counted
         severity_weight_value = tool_config.get(severity_class, 0)
         total_errors_within_sev = 0
     
@@ -106,12 +137,12 @@ def _calculate_static_analysis_tool_score(
             current_severity = severity_data_within_file.severities.get(severity_class)
             total_errors_within_sev += current_severity.get_error_count_in_sev()
         
-        absolute_penalty = total_errors_within_sev * severity_weight_value
-        error_density = round(total_errors_within_sev / loc, 2)
-        adjusted_penalty = absolute_penalty * error_density
+        absolute_penalty = total_errors_within_sev * severity_weight_value # severity weight is applied to the violation count
+        error_density = round(total_errors_within_sev / loc, 2) # unweighted error density
+        adjusted_penalty = absolute_penalty * error_density # adjusted penalty for scoring purpose
         
-        weighted_error_density += absolute_penalty / loc
-        total_penalty += adjusted_penalty
+        weighted_error_density += absolute_penalty / loc # weighted error density of the current severity is added to the overall
+        total_penalty += adjusted_penalty # adjusted penalty of the current severity is added to the total penalty
     
     final_penalty = min(total_penalty, max_deduction)
     final_score = max(max_score - final_penalty, min_score)
@@ -125,6 +156,15 @@ def _calculate_requirements_score(
     processed_junit: ProcessedJunitTests, 
     req_dict: dict
 ) -> tuple[int, int, int]:
+    """determine the requirements score of the submission based on Junit testing results
+
+    Args:
+        processed_junit (ProcessedJunitTests): processed Junit testing results
+        req_dict (dict): grading config data for scoring purposes
+
+    Returns:
+        tuple[int, int, int]: [req_score, total_number_of_tests, number_of_tests_failed]
+    """
     
     possible_scores = req_dict.values()
     max_score = req_dict.get("excellent", 60)
