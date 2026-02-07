@@ -4,8 +4,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1] # .../CodeInspector/
 
 BUILD_XML_PATH = PROJECT_ROOT / "build.xml"
-CONFIG_DIR = PROJECT_ROOT / "app/config"
-XML_REPORT_DIR = PROJECT_ROOT / "build/test_reports"
+CONFIG_DIR = PROJECT_ROOT / "app/app_config"
+XML_REPORT_DIR = PROJECT_ROOT / "build/test-reports"
 GRADE_REPORTS_DIR = PROJECT_ROOT / "build/grade_reports"
 RECORDS_DIR = PROJECT_ROOT / "app/records"
 
