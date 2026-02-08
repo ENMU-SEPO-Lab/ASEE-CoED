@@ -18,14 +18,14 @@ from app.paths import (
 import app.transforming.helpers as transf_helper
 import app.transforming.validation as validator
 import app.transforming.loc as line_counter
-import app.transforming.agreggation as aggregator
+import app.transforming.aggregation as aggregator
 import app.parsing.parser as parser
 import app.grading.scoring as scorer
-import app.grading.percentiles as percentiler
+import app.grading.percentiles as percentile_scorer
 import app.grading.helpers as grading_helper
 import app.grading.reports as report_creator
-import app.persistance.records as recorder
-import app.persistance.error_counts as error_counter
+import app.persistence.records as recorder
+import app.persistence.error_counts as error_counter
 from app.infrastructure.models import SubmissionData, ProcessedSubmission
 
 def run_pipeline(
@@ -80,13 +80,15 @@ def run_pipeline(
     records = grading_helper.load_json(RECORDS_JSON_FILE)
     weighted_error = submission_data.overall_weighted_error 
     
+    percentiles_self, percentiles_class, percentiles_global = None, None, None
+    
     if records:
         # relative to current semester submissions
-        percentiles_self = percentiler.compare_score_with_self(
+        percentiles_self = percentile_scorer.compare_score_with_self(
             student_email, weighted_error, upload_dir, records
         )
         # relative to current semester submissions
-        percentiles_class = percentiler.compare_score_with_class(
+        percentiles_class = percentile_scorer.compare_score_with_class(
             weighted_error, upload_dir, records
         )
     
@@ -95,7 +97,7 @@ def run_pipeline(
     
     if not weighted_csv_data.empty:
         # relative to historical weighted dataset by previously taught course
-        percentiles_global = percentiler.get_global_percentile_score(
+        percentiles_global = percentile_scorer.get_global_percentile_score(
             submission_data.cs_weighted_error,
             submission_data.pmd_weighted_error,
             weighted_error,
@@ -104,12 +106,12 @@ def run_pipeline(
     
     # send data to grade report creation logic
     report_creator.create_grade_report(
+        grade_report_file_path,
         submission_data, 
         processed_submission,
         percentiles_self, 
         percentiles_class, 
-        percentiles_global,
-        grade_report_file_path
+        percentiles_global
     )
     
     # return data to main method for persistence file updates
@@ -139,7 +141,7 @@ if __name__ == "__main__":
         grading_config
     )
     
-    # update persistance files after pipeline finished
+    # update persistence files after pipeline finished
     recorder.update_json(submission_data, RECORDS_JSON_FILE)
     error_counter.update_csv_files(
         processed_submission, 

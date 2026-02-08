@@ -9,12 +9,12 @@ from pathlib import Path
 
 # generate grade report using the previously constructed JSON file
 def create_grade_report(
+    grade_report_file_path: Path,
     submission_data: SubmissionData,
     processed_submission: ProcessedSubmission,
-    percentiles_self: tuple[float, float],
-    percentiles_class: tuple[float, float],
-    percentiles_global: tuple[float, float, float],
-    grade_report_file_path: Path
+    percentiles_self: tuple[float, float] | None = None,
+    percentiles_class: tuple[float, float] | None = None,
+    percentiles_global: tuple[float, float, float] | None = None,
 ):
     """Assembles the grade report and writes it to a .txt file at the provided path
 
@@ -62,38 +62,57 @@ def create_grade_report(
     pmd_lines = generate_pmd_output(pmd_processed, submission_data)
     
     # extract percentile scores from tuples
-    checkstyle_percentile, pmd_percentile, overall_percentile = percentiles_global
-    average_error_dens_self, density_of_last_submission, relative_change_to_self = percentiles_self
-    average_assignment_error_class, relative_change_to_class, comparator_string = percentiles_class
+    if percentiles_global is not None:
+        checkstyle_percentile, pmd_percentile, overall_percentile = percentiles_global
+        
+         # add checkstyle stats to checkstyle lines 
+        cs_lines.append(
+            f"\n\nOverall weighted CheckStyle error density: {round(cs_weighted_density, 5)}"
+            f"\nThis ranks in the {checkstyle_percentile}th percentile of submissions in the database."
+            f"\nThat is, {100 - checkstyle_percentile}% of submissions had a higher CheckStyle error density than this.\n"
+        )
+        # add pmd stats to pmd lines
+        pmd_lines.append(
+            f"\n\nOverall weighted PMD error density: {round(pmd_weighted_density, 5)}"
+            f"\nThis ranks in the {pmd_percentile}th percentile of submissions in the database."
+            f"\nThat is, {100 - pmd_percentile}% of submissions had a higher PMD error density than this. "
+        )
+        
+    else:
+        cs_lines.append(
+            f"\n\nOverall weighted CheckStyle error density: {round(cs_weighted_density, 5)}"
+            f"\n No records available for percentile comparison...\n"
+        )
+        pmd_lines.append(
+            f"\n\nOverall weighted PMD error density: {round(pmd_weighted_density, 5)}"
+            f"\n No records available for percentile comparison...\n"
+        )
+        
+    if percentiles_self is not None and percentiles_class is not None:
+        average_error_dens_self, density_of_last_submission, relative_change_to_self = percentiles_self
+        average_assignment_error_class, relative_change_to_class, comparator_string = percentiles_class
+            
+        # add overall stats to coding style summary lines
+        coding_style_summary_lines = [
+            f"\n\nSUMMARY  {'-' * 40}\n",
+            f"\nThe cumulative weighted error density of this submission is: {round(total_weighted_density, 5)}.",
+            f"\nThis ranks in the: {overall_percentile}th percentile.",
+            f"\nThat is, historically, {100 - overall_percentile}% of the average student submission of previous semesters had a higher error density than this.",
+            f"\n{'-' * 40}",
+            f"\nThe average error density of the student for this assignment is: {average_error_dens_self}",
+            f"\nThe last submission by this student for this assignment had a weighted density of: {density_of_last_submission}",
+            f"\nThe error density of this submission is {relative_change_to_self}% of the last submission.",
+            f"\n{'-' * 40}",
+            f"\nThe average error density of the class for this assignment is: {average_assignment_error_class}",
+            f"\nThe error density of this submission was {round(relative_change_to_class, 2)}% {comparator_string} than the class average.",
+        ]
     
-    # add checkstyle stats to checkstyle lines 
-    cs_lines.append(
-        f"\n\nOverall weighted CheckStyle error density: {round(cs_weighted_density, 5)}"
-        f"\nThis ranks in the {checkstyle_percentile}th percentile of submissions in the database."
-        f"\nThat is, {100 - checkstyle_percentile}% of submissions had a higher CheckStyle error density than this.\n"
-    )
-    
-    # add pmd stats to pmd lines
-    pmd_lines.append(
-        f"\n\nOverall weighted PMD error density: {round(pmd_weighted_density, 5)}"
-        f"\nThis ranks in the {pmd_percentile}th percentile of submissions in the database."
-        f"\nThat is, {100 - pmd_percentile}% of submissions had a higher PMD error density than this. "
-    )
-    
-    # add overall stats to coding style summary lines
-    coding_style_summary_lines = [
-        f"\n\nSUMMARY  {'-' * 40}\n",
-        f"\nThe cumulative weighted error density of this submission is: {round(total_weighted_density, 5)}.",
-        f"\nThis ranks in the: {overall_percentile}th percentile.",
-        f"\nThat is, historically, {100 - overall_percentile}% of the average student submission of previous semesters had a higher error density than this.",
-        f"\n{'-' * 40}",
-        f"\nThe average error density of the student for this assignment is: {average_error_dens_self}",
-        f"\nThe last submission by this student for this assignment had a weighted density of: {density_of_last_submission}",
-        f"\nThe error density of this submission is {relative_change_to_self}% of the last submission.",
-        f"\n{'-' * 40}",
-        f"\nThe average error density of the class for this assignment is: {average_assignment_error_class}",
-        f"\nThe error density of this submission was {round(relative_change_to_class, 2)}% {comparator_string} than the class average.",
-    ]
+    else:
+        coding_style_summary_lines = [
+            f"\n\nSUMMARY  {'-' * 40}\n",
+            f"\nThe cumulative weighted error density of this submission is: {round(total_weighted_density, 5)}.",
+            f"\nThere are no current records for percentile comparisons of the submission..."
+        ]
     
     # generate unit testing lines
     unit_testing_lines = generate_unitTesting_output(junit_processed)
