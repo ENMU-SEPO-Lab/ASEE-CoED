@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import TypeAlias, ClassVar
 from collections import Counter
 from collections.abc import Iterable
+from pathlib import Path
 
 @dataclass
 class CheckstyleViolation:
@@ -453,3 +454,4 @@ class SubmissionData:
     top_cs_error_types: list[tuple[str, int]]
     top_pmd_error_types: list[tuple[str, int]]
     run_score: int | None = None
+    report_file_path: Path | None = None

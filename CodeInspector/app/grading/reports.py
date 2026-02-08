@@ -3,17 +3,16 @@ from app.infrastructure.models import (
     ProcessedSubmission,
     ProcessedViolations,
     ProcessedJunitTests,
-    UnitTestCase
+    # UnitTestCase
 )
 from pathlib import Path
 
 # generate grade report using the previously constructed JSON file
 def create_grade_report(
-    grade_report_file_path: Path,
     submission_data: SubmissionData,
     processed_submission: ProcessedSubmission,
-    percentiles_self: tuple[float, float] | None = None,
-    percentiles_class: tuple[float, float] | None = None,
+    percentiles_self: tuple[float, float, float, float, float, int] | None = None,
+    percentiles_class: tuple[float, float, float] | None = None,
     percentiles_global: tuple[float, float, float] | None = None,
 ):
     """Assembles the grade report and writes it to a .txt file at the provided path
@@ -21,14 +20,15 @@ def create_grade_report(
     Args:
         submission_data (SubmissionData): the data of the evaluated submission
         processed_submission (ProcessedSubmission): the processed submission (need some info from this)
-        percentiles_self (tuple[float, float]): for feedback
-        percentiles_class (tuple[float, float]): for feedback
+        percentiles_self (tuple[float, float, float, float, float, int]): for feedback
+        percentiles_class (tuple[float, float, float]): for feedback
         percentiles_global (tuple[float, float, float]): for feedback
-        grade_report_file_path (Path): the file path
     """
     # extract data
+    grade_report_file_path = submission_data.report_file_path
     student_email = submission_data.email
     report_date = submission_data.date
+    assignment_name = submission_data.upload_dir_name
     loc = submission_data.loc
     number_of_cs_violations = submission_data.cs_violation_count
     number_of_pmd_violations = submission_data.pmd_violation_count
@@ -44,9 +44,12 @@ def create_grade_report(
     number_of_tests = submission_data.junit_test_count
     number_of_failures = submission_data.junit_failed_count
     
+    submission_number = percentiles_self[5]
+    
     # intro lines for report
     intro_lines = [
-        f"This is report {report_date} for student {student_email}\n",
+        f"This report ({report_date}) is for the submission made by the student with the following email address: {student_email}",
+        f"\nThis submission is number {submission_number} by this student for the assignment named '{assignment_name}'",
         f"\nThe report covers a total of {loc} lines of code\n",
         f"\n{number_of_cs_violations} errors were detected by CheckStyle",
         f"\n{number_of_pmd_violations} errors were detected by PMD",
@@ -62,12 +65,13 @@ def create_grade_report(
     pmd_lines = generate_pmd_output(pmd_processed, submission_data)
     
     # extract percentile scores from tuples
+    # if records exist and stats were calculated successfully 
     if percentiles_global is not None:
         checkstyle_percentile, pmd_percentile, overall_percentile = percentiles_global
         
          # add checkstyle stats to checkstyle lines 
         cs_lines.append(
-            f"\n\nOverall weighted CheckStyle error density: {round(cs_weighted_density, 5)}"
+            f"\nOverall weighted CheckStyle error density: {round(cs_weighted_density, 5)}"
             f"\nThis ranks in the {checkstyle_percentile}th percentile of submissions in the database."
             f"\nThat is, {100 - checkstyle_percentile}% of submissions had a higher CheckStyle error density than this.\n"
         )
@@ -77,7 +81,8 @@ def create_grade_report(
             f"\nThis ranks in the {pmd_percentile}th percentile of submissions in the database."
             f"\nThat is, {100 - pmd_percentile}% of submissions had a higher PMD error density than this. "
         )
-        
+    
+    # if record data could not be loaded / is None    
     else:
         cs_lines.append(
             f"\n\nOverall weighted CheckStyle error density: {round(cs_weighted_density, 5)}"
@@ -87,11 +92,14 @@ def create_grade_report(
             f"\n\nOverall weighted PMD error density: {round(pmd_weighted_density, 5)}"
             f"\n No records available for percentile comparison...\n"
         )
-        
+    
+    # if records exist and stats were calculated successfully    
     if percentiles_self is not None and percentiles_class is not None:
-        average_error_dens_self, density_of_last_submission, relative_change_to_self = percentiles_self
+        average_error_dens_self, density_of_last_submission, density_of_first_submission = percentiles_self[0:3]
+        relative_change_to_last, relative_change_to_first = percentiles_self[3:5]
         average_assignment_error_class, relative_change_to_class, comparator_string = percentiles_class
             
+        print 
         # add overall stats to coding style summary lines
         coding_style_summary_lines = [
             f"\n\nSUMMARY  {'-' * 40}\n",
@@ -100,13 +108,18 @@ def create_grade_report(
             f"\nThat is, historically, {100 - overall_percentile}% of the average student submission of previous semesters had a higher error density than this.",
             f"\n{'-' * 40}",
             f"\nThe average error density of the student for this assignment is: {average_error_dens_self}",
-            f"\nThe last submission by this student for this assignment had a weighted density of: {density_of_last_submission}",
-            f"\nThe error density of this submission is {relative_change_to_self}% of the last submission.",
+            f"\n{'-' * 40}",
+            f"\nThe first submission by this student for this assignment had a weighted density of: {density_of_first_submission}",
+            f"\nThe error density of this submission is {relative_change_to_first}% of the first submission.",
+            f"\n{'-' * 40}",
+            f"\nThe previous submission by this student for this assignment had a weighted density of: {density_of_last_submission}",
+            f"\nThe error density of this submission is {relative_change_to_last}% of the previous submission.",
             f"\n{'-' * 40}",
             f"\nThe average error density of the class for this assignment is: {average_assignment_error_class}",
             f"\nThe error density of this submission was {round(relative_change_to_class, 2)}% {comparator_string} than the class average.",
         ]
     
+    # if record data could not be loaded / is None
     else:
         coding_style_summary_lines = [
             f"\n\nSUMMARY  {'-' * 40}\n",
@@ -249,7 +262,7 @@ def generate_score_output(requirements_score, runtime_score, coding_stand_score)
             f"\n    - Requirements: {requirements_score}",
             f"\n    - Coding Standards: {coding_stand_score}",
             f"\n    - Runtime: TBD", # need dynamically -> GenAI
-            f"\n    - Efficieny: TBD", # need dynamically -> GenAI
+            f"\n    - Efficiency: TBD", # need dynamically -> GenAI
             f"\n{'=' * 100}",
             f"\n    - Overall: {requirements_score + coding_stand_score}",
             f"\n{'=' * 45} END REPORT {'=' * 45}"

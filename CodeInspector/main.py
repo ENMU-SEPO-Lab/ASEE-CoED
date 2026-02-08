@@ -76,6 +76,8 @@ def run_pipeline(
         upload_dir
     )
     
+    submission_data.report_file_path = grade_report_file_path
+    
     grading_helper.ensure_json_file(RECORDS_JSON_FILE) # make sure records.json exists
     records = grading_helper.load_json(RECORDS_JSON_FILE)
     weighted_error = submission_data.overall_weighted_error 
@@ -106,7 +108,6 @@ def run_pipeline(
     
     # send data to grade report creation logic
     report_creator.create_grade_report(
-        grade_report_file_path,
         submission_data, 
         processed_submission,
         percentiles_self, 

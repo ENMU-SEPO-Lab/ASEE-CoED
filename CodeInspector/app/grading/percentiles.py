@@ -34,7 +34,7 @@ def compare_score_with_self(
     error_density: float, 
     upload_dir: Path | str, 
     records: dict
-) -> tuple[float, float, float]:
+) -> tuple[float, float, float, float, float, int]:
     """Compares the score of the current submission to submissions made by 
     the student for the same assignment
 
@@ -45,7 +45,11 @@ def compare_score_with_self(
         records (dict): records.json contents
 
     Returns:
-        tuple[float, float, float]: [average_error_density, density_of_last_submission, relative_change]
+        tuple[float, float, float, float, float, int]:  [
+                                                            average_error_density, density_of_last_submission, 
+                                                            density_of_first_submission, relative_change_to_last,  
+                                                            relative_change_to_first, submission_number
+                                                        ]
     """
     
     assignment_dir = upload_dir.name
@@ -72,10 +76,17 @@ def compare_score_with_self(
     # average recorded error density across all submissions the student made for this assignment
     average_error_density = round(sum(error_density_list) / len(error_density_list), 4)
     # relative change compared to the last submission
-    density_of_last_submission = error_density_list[(len(error_density_list) - 1)]
-    relative_change = round(error_density / density_of_last_submission, 4) * 100
+    density_of_first_submission = round(error_density_list[0], 4)
+    relative_change_to_first = round(error_density / density_of_first_submission, 4) * 100
+    density_of_last_submission = round(error_density_list[(len(error_density_list) - 1)], 4)
+    relative_change_to_last = round(error_density / density_of_last_submission, 4) * 100
+    submission_number = len(error_density_list)
     
-    return average_error_density, density_of_last_submission, relative_change
+    return  (
+                average_error_density, density_of_last_submission, 
+                density_of_first_submission, relative_change_to_last,  
+                relative_change_to_first, submission_number
+            )
 
 def compare_score_with_class(
     error_density: float, 
@@ -102,7 +113,7 @@ def compare_score_with_class(
     
     error_density_list = [] # initialize list to store the error_density values
     
-    for student, submissions in assignment_data.items(): # iterate over all student records within the assigment
+    for student, submissions in assignment_data.items(): # iterate over all student records within the assignment
         if submissions is None: # if student has no submissions 
             continue
         
