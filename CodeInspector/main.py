@@ -89,6 +89,11 @@ def run_pipeline(
         percentiles_self = percentile_scorer.compare_score_with_self(
             student_email, weighted_error, upload_dir, records, grading_config
         )
+        
+        percentiles_self_global = percentile_scorer.compare_score_with_self_global(
+            student_email, weighted_error, upload_dir, records, grading_config
+        )
+        
         # relative to current semester submissions
         percentiles_class = percentile_scorer.compare_score_with_class(
             weighted_error, upload_dir, records, grading_config
@@ -114,7 +119,8 @@ def run_pipeline(
         grading_config,
         percentiles_self, 
         percentiles_class, 
-        percentiles_global
+        percentiles_global,
+        percentiles_self_global
     )
     
     # return data to main method for persistence file updates

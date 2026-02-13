@@ -34,8 +34,59 @@ def get_global_percentile_score(
     
     return percentile_checkstyle, percentile_pmd, percentile_overall
 
- # TODO: compare_score_with_self_across_all_assignments
- ## only consider the final submission of each assignment
+def compare_score_with_self_global(
+    student_email: str, 
+    error_density: float, 
+    upload_dir: Path | str, 
+    records: dict,
+    grading_config: dict
+) -> tuple[float, float, float, float, float, int]:
+    assignment_dir = upload_dir.name
+    precision_ed = grading_config.get("system_decimal_precision", {}).get("error_density", 4)
+    
+    if records is None:
+        print("No records for assignments available")
+        return
+    
+    error_density_list = []
+    
+    for assignment, assignment_data in records.items():
+        
+        # skip records of current assignment
+        if assignment == assignment_dir:
+            continue
+        
+        student_data = assignment_data.get(student_email, {})    
+        
+        if not student_data:
+            print(f"No data for {student_email} under assignment {assignment}")
+            continue
+        
+        final_submission = student_data[len(student_data) - 1] # get the last submission of the student
+        submission_error_density = final_submission.get("error density", None)
+            
+        if submission_error_density is not None:
+            error_density_list.append(submission_error_density)        
+            
+    print(f"error density list: {error_density_list}")
+    
+    if len(error_density_list) < 1: # if this is the first assignment of the student
+        return
+    
+    # average recorded error density across all final submissions of the student
+    average_error_density = round(sum(error_density_list) / len(error_density_list), precision_ed)
+    # relative change compared to the final submission of the previous assignment
+    density_of_first_submission = round(error_density_list[0], precision_ed)
+    relative_change_to_first = round(error_density / density_of_first_submission, precision_ed) * 100
+    density_of_last_submission = round(error_density_list[(len(error_density_list) - 1)], precision_ed)
+    relative_change_to_last = round(error_density / density_of_last_submission, precision_ed) * 100
+    assignment_number = len(error_density_list)
+    
+    return  (
+                average_error_density, density_of_last_submission, 
+                density_of_first_submission, relative_change_to_last,  
+                relative_change_to_first, assignment_number
+            )
  
 def compare_score_with_self(
     student_email: str, 
@@ -131,16 +182,14 @@ def compare_score_with_class(
         if submissions is None: # if student has no submissions 
             continue
         
-        # TODO: only get the error density of the final submission
+        if len(submissions) < 1:
+            continue
         
-        for submission in submissions: # iterate over every submission
-            if submission is None:
-                continue
+        final_submission = submissions[len(submissions) - 1] # get the last submission of the student
+        submission_error_density = final_submission.get("error density", None)
             
-            submission_error_density = submission.get("error density")
-            
-            if submission_error_density is not None:
-                error_density_list.append(submission_error_density)
+        if submission_error_density is not None:
+            error_density_list.append(submission_error_density)
             
     if not error_density_list:
         print(f"No error density records found for {assignment_dir}")

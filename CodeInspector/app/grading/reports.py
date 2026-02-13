@@ -14,7 +14,8 @@ def create_grade_report(
     grading_config: dict,
     percentiles_self: tuple[float, float, float, float, float, int] | None = None,
     percentiles_class: tuple[float, float, float] | None = None,
-    percentiles_global: tuple[float, float, float] | None = None
+    percentiles_global: tuple[float, float, float] | None = None,
+    percentiles_self_global: tuple[float, float, float, float, float, int] | None = None
 ):
     """Assembles the grade report and writes it to a .txt file at the provided path
 
@@ -25,6 +26,7 @@ def create_grade_report(
         percentiles_self (tuple[float, float, float, float, float, int]): for feedback
         percentiles_class (tuple[float, float, float]): for feedback
         percentiles_global (tuple[float, float, float]): for feedback
+        percentiles_self_global (tuple[float, float, float, float, float, int]): for feedback
     """
     # extract data
     grade_report_file_path = submission_data.report_file_path
@@ -98,10 +100,16 @@ def create_grade_report(
             f"\n No records available for percentile comparison...\n"
         )
     
+    print(percentiles_self, percentiles_self_global, percentiles_class)
+    
     # if records exist and stats were calculated successfully    
-    if percentiles_self is not None and percentiles_class is not None:
+    if percentiles_self is not None and percentiles_class is not None and percentiles_self_global is not None:
         average_error_dens_self, density_of_last_submission, density_of_first_submission = percentiles_self[0:3]
         relative_change_to_last, relative_change_to_first = percentiles_self[3:5]
+        
+        average_error_dens_self_global, density_of_last_assign, density_of_first_assign = percentiles_self_global[0:3]
+        relative_change_to_last_assign, relative_change_to_first_assign = percentiles_self_global[3:5]
+        
         average_assignment_error_class, relative_change_to_class, comparator_string = percentiles_class
             
         print 
@@ -119,6 +127,14 @@ def create_grade_report(
             f"\n{'-' * 40}",
             f"\nThe previous submission by this student for this assignment had a weighted density of: {density_of_last_submission}",
             f"\nThe error density of this submission is {relative_change_to_last}% of the previous submission.",
+            f"\n{'-' * 40}",
+            f"\nThe average error density of the student across all their final submissions across all assignment is: {average_error_dens_self_global}",
+            f"\n{'-' * 40}",
+            f"\nThe first final submission of the first assignment by this student had a weighted density of: {density_of_first_assign}",
+            f"\nThe error density of the submission for this assignment is {relative_change_to_first_assign}% of the first assignment.",
+            f"\n{'-' * 40}",
+            f"\nThe final submission for the previous assignment by this student had a weighted density of: {density_of_last_assign}",
+            f"\nThe error density of this assignment is {relative_change_to_last_assign}% of the previous assignment.",
             f"\n{'-' * 40}",
             f"\nThe average error density of the class for this assignment is: {average_assignment_error_class}",
             f"\nThe error density of this submission was {round(relative_change_to_class, precision_perc_val)}% {comparator_string} than the class average.",
