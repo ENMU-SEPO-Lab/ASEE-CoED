@@ -6,7 +6,8 @@ def get_global_percentile_score(
     cs_error_density: float ,
     pmd_error_density: float, 
     overall_error_density: float, 
-    data: pd.DataFrame
+    data: pd.DataFrame,
+    grading_config: dict
 ) -> tuple[float, float, float]:
     """Calculates the percentile scores of the computed error densities of the analyzed file in relation
     to the global dataset (weighted_data.csv)
@@ -15,6 +16,8 @@ def get_global_percentile_score(
         checkStyle_error_density (float): checkstyle error density of the file
         pmd_error_density (float): pmd error density of the file
         total_error_density (float): overall error density of the file
+        data (pd.DataFrame): dataframe from weighted_data.csv file
+        grading_config (dict): grading_config.json contents
 
     Returns:
         tuple[float, float, float]: [cs percentile score, pmd percentile score, overall percentile score]
@@ -23,17 +26,23 @@ def get_global_percentile_score(
     pmd_data = data["pmd_density"].to_numpy()
     total_data = data["total_density"].to_numpy()
     
-    percentile_checkstyle = float(round(percentileofscore(cs_data, cs_error_density, kind="rank"), 2))
-    percentile_pmd = float(round(percentileofscore(pmd_data, pmd_error_density, kind="rank"), 2))
-    percentile_overall = float(round(percentileofscore(total_data, overall_error_density, kind='rank'), 2))
+    precision_perc = grading_config.get("system_decimal_precision", {}).get("percentile_score", 2)
+    
+    percentile_checkstyle = float(round(percentileofscore(cs_data, cs_error_density, kind="rank"), precision_perc))
+    percentile_pmd = float(round(percentileofscore(pmd_data, pmd_error_density, kind="rank"), precision_perc))
+    percentile_overall = float(round(percentileofscore(total_data, overall_error_density, kind='rank'), precision_perc))
     
     return percentile_checkstyle, percentile_pmd, percentile_overall
 
+ # TODO: compare_score_with_self_across_all_assignments
+ ## only consider the final submission of each assignment
+ 
 def compare_score_with_self(
     student_email: str, 
     error_density: float, 
     upload_dir: Path | str, 
-    records: dict
+    records: dict,
+    grading_config: dict
 ) -> tuple[float, float, float, float, float, int]:
     """Compares the score of the current submission to submissions made by 
     the student for the same assignment
@@ -43,6 +52,7 @@ def compare_score_with_self(
         error_density (float): overall weighted error density of submission
         upload_dir (Path | str): upload_dir path
         records (dict): records.json contents
+        grading_config (dict): grading_config.json contents
 
     Returns:
         tuple[float, float, float, float, float, int]:  [
@@ -54,7 +64,8 @@ def compare_score_with_self(
     
     assignment_dir = upload_dir.name
     assignment_data = records.get(assignment_dir, {})
-    
+    precision_ed = grading_config.get("system_decimal_precision", {}).get("error_density", 4)
+
     if not assignment_data:
         print(f"There are no records for {assignment_dir}")
         return
@@ -74,12 +85,12 @@ def compare_score_with_self(
         return
     
     # average recorded error density across all submissions the student made for this assignment
-    average_error_density = round(sum(error_density_list) / len(error_density_list), 4)
+    average_error_density = round(sum(error_density_list) / len(error_density_list), precision_ed)
     # relative change compared to the last submission
-    density_of_first_submission = round(error_density_list[0], 4)
-    relative_change_to_first = round(error_density / density_of_first_submission, 4) * 100
-    density_of_last_submission = round(error_density_list[(len(error_density_list) - 1)], 4)
-    relative_change_to_last = round(error_density / density_of_last_submission, 4) * 100
+    density_of_first_submission = round(error_density_list[0], precision_ed)
+    relative_change_to_first = round(error_density / density_of_first_submission, precision_ed) * 100
+    density_of_last_submission = round(error_density_list[(len(error_density_list) - 1)], precision_ed)
+    relative_change_to_last = round(error_density / density_of_last_submission, precision_ed) * 100
     submission_number = len(error_density_list)
     
     return  (
@@ -91,7 +102,8 @@ def compare_score_with_self(
 def compare_score_with_class(
     error_density: float, 
     upload_dir: Path | str,
-    records: dict
+    records: dict,
+    grading_config: dict
 ) -> tuple[float, float]:
     """Compares the score of the current submission to submissions made by 
     all other class members for the same assignment
@@ -100,12 +112,14 @@ def compare_score_with_class(
         error_density (float): overall weighted error density of submission
         upload_dir (Path | str): upload_dir path
         records (dict): records.json contents
+        grading_config (dict): grading_config.json contents
 
     Returns:
         tuple[float, float, str]: [average_assignment_error, score_relative_to_class, comparator]
     """
     assignment_dir = upload_dir.name
     assignment_data = records.get(assignment_dir, {})
+    precision_ed = grading_config.get("system_decimal_precision", {}).get("error_density", 4)
     
     if not assignment_data: # if no records under this directory name
         print(f"There are no records for {assignment_dir}")
@@ -116,6 +130,8 @@ def compare_score_with_class(
     for student, submissions in assignment_data.items(): # iterate over all student records within the assignment
         if submissions is None: # if student has no submissions 
             continue
+        
+        # TODO: only get the error density of the final submission
         
         for submission in submissions: # iterate over every submission
             if submission is None:
@@ -131,9 +147,9 @@ def compare_score_with_class(
         return
 
     # calculate average error of all student submissions for this assignment
-    average_assignment_error = round(sum(error_density_list) / len(error_density_list), 4) 
+    average_assignment_error = round(sum(error_density_list) / len(error_density_list), precision_ed) 
     # compare the score of the current submission to the overall average
-    score_relative_to_class = round(error_density / average_assignment_error, 4)
+    score_relative_to_class = round(error_density / average_assignment_error, precision_ed)
     
     # change output variables based on whether the error density is higher or lower
     if score_relative_to_class < 1:

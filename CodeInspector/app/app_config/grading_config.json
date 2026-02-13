@@ -32,5 +32,10 @@
             "satisfactory": 12,
             "unsatisfactory": 8
         }
+    },
+    "system_decimal_precision": {
+        "error_density": 4,
+        "percentile_score": 2,
+        "percent_value": 2
     }
 }

@@ -87,11 +87,11 @@ def run_pipeline(
     if records:
         # relative to current semester submissions
         percentiles_self = percentile_scorer.compare_score_with_self(
-            student_email, weighted_error, upload_dir, records
+            student_email, weighted_error, upload_dir, records, grading_config
         )
         # relative to current semester submissions
         percentiles_class = percentile_scorer.compare_score_with_class(
-            weighted_error, upload_dir, records
+            weighted_error, upload_dir, records, grading_config
         )
     
     grading_helper.check_for_weighted_data_csv(WEIGHTED_DATA_CSV)
@@ -103,13 +103,15 @@ def run_pipeline(
             submission_data.cs_weighted_error,
             submission_data.pmd_weighted_error,
             weighted_error,
-            weighted_csv_data   
+            weighted_csv_data,
+            grading_config 
         )
     
     # send data to grade report creation logic
     report_creator.create_grade_report(
         submission_data, 
         processed_submission,
+        grading_config,
         percentiles_self, 
         percentiles_class, 
         percentiles_global
@@ -131,7 +133,7 @@ if __name__ == "__main__":
 
     with open(GRADING_CONFIG_FILE, "r") as file:
         grading_config = json.load(file)
-        
+                
     print("Test files read successfully")
     
     # run the pipeline
