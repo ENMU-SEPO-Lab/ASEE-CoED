@@ -178,7 +178,7 @@ def compare_score_with_class(
     
     error_density_list = [] # initialize list to store the error_density values
     
-    for student, submissions in assignment_data.items(): # iterate over all student records within the assignment
+    for submissions in assignment_data.values(): # iterate over all student records within the assignment
         if submissions is None: # if student has no submissions 
             continue
         
@@ -195,7 +195,7 @@ def compare_score_with_class(
         print(f"No error density records found for {assignment_dir}")
         return
 
-    # calculate average error of all student submissions for this assignment
+    # calculate average error of all final submissions by students for this assignment
     average_assignment_error = round(sum(error_density_list) / len(error_density_list), precision_ed) 
     # compare the score of the current submission to the overall average
     score_relative_to_class = round(error_density / average_assignment_error, precision_ed)

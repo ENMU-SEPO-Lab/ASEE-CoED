@@ -56,7 +56,8 @@ def run_pipeline(
     parsed = parser.parse_and_combine_test_files(checkstyle_xml, pmd_xml, junit_txt)
             
     check_date = transf_helper.check_date() # get current date and format it    
-    loc = line_counter.count_loc_in_dir(upload_dir) # count the lines of code detected in the submission dir
+    # loc = line_counter.count_loc_in_dir(upload_dir) # count the lines of code detected in the submission dir
+    loc = line_counter.count_lines_in_dir(upload_dir) # count the lines of code detected in the submission dir
     student_email = validator.extract_author_from_submission(upload_dir) # get student email
     
     # process the parsed data to prepare for score evaluation

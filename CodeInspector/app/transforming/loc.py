@@ -1,5 +1,26 @@
 from pathlib import Path
 
+def count_lines_in_dir(source_dir: Path) -> int:
+    """this function counts the lines of code of all java files found in the given directory
+    ignores lines with whitespace only
+
+    Args:
+        source_dir (Path): the path of the directory
+
+    Returns:
+        int: the line count
+    """
+    total = 0
+    for java_file in source_dir.rglob("*.java"):
+        with java_file.open("r", encoding="utf-8", errors="ignore") as file:
+            subtotal = 0 
+            for line in file:
+                if line.strip():
+                    subtotal += 1
+            total += subtotal
+    print(f"total lines in directory: {total}")
+    return total
+
 def count_loc_in_dir(source_dir: Path | str) -> int:
     """
     function to count lines of code of all Java files in a given dir. Ignores whitespace lines and comments
@@ -26,11 +47,11 @@ def _count_loc_in_file(path: Path | str) -> int:
     Returns:
         int: the number of loc in the file
     """
-    path = Path(path)
+    file_path = Path(path)
     in_block_comment = False
     loc = 0
 
-    with path.open("r", encoding="utf-8", errors="ignore") as f:
+    with file_path.open("r", encoding="utf-8", errors="ignore") as f:
         for line in f:
             code, in_block_comment = _strip_java_comments(line, in_block_comment)
             if code.strip():  # if line not empty after removing comments
