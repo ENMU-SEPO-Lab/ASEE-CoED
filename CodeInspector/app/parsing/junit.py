@@ -37,10 +37,11 @@ def parse_test_results(junit_txt: str) -> UnitTestingResults:
                 summary.errors = int(parts[2].split(":")[1].strip())
                 summary.skipped = int(parts[3].split(":")[1].strip())
                 summary.time_elapsed = parts[4].split(":")[1].strip()
+                
             elif line.startswith("Testcase:"):
                 
-                if current_test_case is not None:
-                    result.testcases.append(current_test_case)
+                if current_test_case is not None: # to avoid storing the default None value in the first iteration
+                    result.testcases.append(current_test_case) # storing parsed testcase from previous iteration
                     
                 parts = line.split(" took ")
                 test_case_name = parts[0].split(":")[1].strip()

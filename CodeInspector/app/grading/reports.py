@@ -5,7 +5,6 @@ from app.infrastructure.models import (
     ProcessedJunitTests,
     # UnitTestCase
 )
-from pathlib import Path
 
 # generate grade report using the previously constructed JSON file
 def create_grade_report(
@@ -42,6 +41,7 @@ def create_grade_report(
 
     precision_ed = grading_config.get("system_decimal_precision", {}).get("error_density", 4)
     precision_perc_val = grading_config.get("system_decimal_precision", {}).get("percent_value", 4)
+    criteria_ratings_dict = grading_config.get("criteria_ratings")
     
     cs_processed = processed_submission.cs_processed
     pmd_processed = processed_submission.pmd_processed
@@ -51,7 +51,10 @@ def create_grade_report(
     number_of_tests = submission_data.junit_test_count
     number_of_failures = submission_data.junit_failed_count
     
-    submission_number = percentiles_self[5]
+    if percentiles_self is not None:
+        submission_number = percentiles_self[5]
+    else:
+        submission_number = 1
     
     # intro lines for report
     intro_lines = [
@@ -99,9 +102,7 @@ def create_grade_report(
             f"\n\nOverall weighted PMD error density: {round(pmd_weighted_density, precision_ed)}"
             f"\n No records available for percentile comparison...\n"
         )
-    
-    print(percentiles_self, percentiles_self_global, percentiles_class)
-    
+        
     # if records exist and stats were calculated successfully    
     if percentiles_self is not None and percentiles_class is not None and percentiles_self_global is not None:
         average_error_dens_self, density_of_last_submission, density_of_first_submission = percentiles_self[0:3]
@@ -123,18 +124,18 @@ def create_grade_report(
             f"\nThe average error density of the student for this assignment is: {average_error_dens_self}",
             f"\n{'-' * 40}",
             f"\nThe first submission by this student for this assignment had a weighted density of: {density_of_first_submission}",
-            f"\nThe error density of this submission is {relative_change_to_first}% of the first submission.",
+            f"\nThis marks a {relative_change_to_first}% {get_comparator(relative_change_to_first)} in error density compared to their first submission for this assignment.",
             f"\n{'-' * 40}",
             f"\nThe previous submission by this student for this assignment had a weighted density of: {density_of_last_submission}",
-            f"\nThe error density of this submission is {relative_change_to_last}% of the previous submission.",
+            f"\nThis marks a {relative_change_to_last}% {get_comparator(relative_change_to_last)} in error density compared to their previous submission for this assignment.",
             f"\n{'-' * 40}",
             f"\nThe average error density of the student across all their final submissions across all assignment is: {average_error_dens_self_global}",
             f"\n{'-' * 40}",
-            f"\nThe first final submission of the first assignment by this student had a weighted density of: {density_of_first_assign}",
-            f"\nThe error density of the submission for this assignment is {relative_change_to_first_assign}% of the first assignment.",
+            f"\nThe final submission of the first assignment by this student had a weighted density of: {density_of_first_assign}",
+            f"\nThis marks a {relative_change_to_first_assign}% {get_comparator(relative_change_to_first_assign)} in error density compared to their first assignment.",
             f"\n{'-' * 40}",
             f"\nThe final submission for the previous assignment by this student had a weighted density of: {density_of_last_assign}",
-            f"\nThe error density of this assignment is {relative_change_to_last_assign}% of the previous assignment.",
+            f"\nThis marks a {relative_change_to_last_assign}% {get_comparator(relative_change_to_last_assign)} in error density compared to their previous assignment.",
             f"\n{'-' * 40}",
             f"\nThe average error density of the class for this assignment is: {average_assignment_error_class}",
             f"\nThe error density of this submission was {round(relative_change_to_class, precision_perc_val)}% {comparator_string} than the class average.",
@@ -153,11 +154,16 @@ def create_grade_report(
 
     coding_std_score = submission_data.coding_std_score
     runtime_score = submission_data.run_score
-    if not runtime_score:
-        runtime_score = 0
+    efficiency_score = submission_data.eff_score
     requirements_score = submission_data.req_score
     
-    score_lines = generate_score_output(requirements_score, runtime_score, coding_std_score)
+    score_lines = generate_score_output(
+        requirements_score, 
+        runtime_score, 
+        coding_std_score, 
+        efficiency_score, 
+        criteria_ratings_dict
+    )
     
     # write all lines to .txt file and store the file under specified path
     with open(grade_report_file_path, "w") as file:
@@ -276,16 +282,35 @@ def generate_unitTesting_output(junit_processed: ProcessedJunitTests) -> list:
         
     return unit_testing_lines
    
-def generate_score_output(requirements_score, runtime_score, coding_stand_score) -> list:
+def generate_score_output(
+    requirements_score, 
+    runtime_score, 
+    coding_stand_score, 
+    efficiency_score, 
+    criteria_ratings_dict
+) -> list:
+    max_score_req = criteria_ratings_dict.get("requirements").get("excellent")
+    max_score_code_std = criteria_ratings_dict.get("coding_standards").get("excellent")
+    max_score_run = criteria_ratings_dict.get("runtime").get("excellent")
+    max_score_eff = criteria_ratings_dict.get("efficiency").get("excellent")
+    
+    overall_score = requirements_score + coding_stand_score + runtime_score + efficiency_score
+    max_score_overall = max_score_req + max_score_code_std + max_score_eff + max_score_run
+    
     # Compute final score with the individual rubric scores and generate score output lines
     student_score_output = [
             f"\n{'=' * 35}  FINAL SCORE   {'=' * 45}",
-            f"\n    - Requirements: {requirements_score}",
-            f"\n    - Coding Standards: {coding_stand_score}",
-            f"\n    - Runtime: TBD", # need dynamically -> GenAI
-            f"\n    - Efficiency: TBD", # need dynamically -> GenAI
+            f"\n    - Requirements: {requirements_score} (out of {max_score_req})",
+            f"\n    - Coding Standards: {coding_stand_score} (out of {max_score_code_std})",
+            f"\n    - Runtime: {runtime_score} (out of {max_score_run})", # need dynamically -> GenAI
+            f"\n    - Efficiency: {efficiency_score} (out of {max_score_eff})", # need dynamically -> GenAI
             f"\n{'=' * 100}",
-            f"\n    - Overall: {requirements_score + coding_stand_score}",
+            f"\n    - Overall: {overall_score} (out of {max_score_overall})",
             f"\n{'=' * 45} END REPORT {'=' * 45}"
         ]
     return student_score_output
+
+def get_comparator(percent_value: float) -> str:
+    if percent_value >= 100:
+        return "worsening"
+    return "improvement"

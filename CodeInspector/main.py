@@ -2,6 +2,7 @@
     The entry point of the API
 """
 
+import sys
 import json
 from app.paths import (
     CS_XML_FILE, 
@@ -52,19 +53,33 @@ def run_pipeline(
         # TODO: abort pipeline
         raise
     
+    student_email = validator.extract_author_from_submission(upload_dir) # get student email
+    grading_helper.ensure_json_file(RECORDS_JSON_FILE) # make sure records.json exists
+    records = grading_helper.load_json(RECORDS_JSON_FILE)
+    max_submission_num = grading_config.get("max_submissions_per_assignment")
+    
+    # check if maximum submissions for this assignment has been reached:
+    if records.get(upload_dir.name):
+        student_records = records.get(upload_dir.name).get(student_email)
+        if student_records:
+            num_submissions_made = len(records.get(upload_dir.name).get(student_email))
+            if num_submissions_made > max_submission_num:
+                print(f"Student reached the maximum number of submissions ({max_submission_num}) for this assignment")
+                # abort pipeline
+                sys.exit()
+        
     # send xml files to parser logic and receive CombinedParsedViolations object
     parsed = parser.parse_and_combine_test_files(checkstyle_xml, pmd_xml, junit_txt)
             
     check_date = transf_helper.check_date() # get current date and format it    
-    # loc = line_counter.count_loc_in_dir(upload_dir) # count the lines of code detected in the submission dir
-    loc = line_counter.count_lines_in_dir(upload_dir) # count the lines of code detected in the submission dir
-    student_email = validator.extract_author_from_submission(upload_dir) # get student email
+    # loc = line_counter.count_loc_in_dir(upload_dir) # count the lines of code detected in the submission dir (ignores blank lines and comments)
+    loc = line_counter.count_lines_in_dir(upload_dir) # count the lines of code detected in the submission dir (ignores blank lines)
     
     # process the parsed data to prepare for score evaluation
     processed_submission = aggregator.process_submission_data(parsed)
     
     transf_helper.create_grading_dir(GRADE_REPORTS_DIR) # make sure dir for grade report exists
-    # create grade_report_file name
+    # create grade_report_file path
     grade_report_file_path = transf_helper.create_grading_rep_file_name(GRADE_REPORTS_DIR, check_date) 
     
     # evaluate the submission
@@ -78,9 +93,6 @@ def run_pipeline(
     )
     
     submission_data.report_file_path = grade_report_file_path
-    
-    grading_helper.ensure_json_file(RECORDS_JSON_FILE) # make sure records.json exists
-    records = grading_helper.load_json(RECORDS_JSON_FILE)
     weighted_error = submission_data.overall_weighted_error 
     
     percentiles_self, percentiles_class, percentiles_global = None, None, None

@@ -191,7 +191,7 @@ class SeveritiesWithinFile:
         return type_counts_in_severities
     
     def get_sev_counts_in_file(self) -> Counter:
-        """Gets the number of errors of each severit within a file
+        """Gets the number of errors of each severity within a file
 
         Returns:
             Counter: items of form (sev_name: str -> error_count: int)
@@ -423,8 +423,6 @@ class ProcessedJunitTests:
     all_tests: list[UnitTestCase]
     failed_tests: list[UnitTestCase]
     
-
-
 @dataclass 
 class ProcessedSubmission:
     cs_processed: ProcessedViolations
@@ -449,9 +447,10 @@ class SubmissionData:
     junit_failed_count: int
     coding_std_score: int
     req_score: int
+    eff_score: int
+    run_score: int
     overall_score: int
     overall_weighted_error: float
     top_cs_error_types: list[tuple[str, int]]
     top_pmd_error_types: list[tuple[str, int]]
-    run_score: int | None = None
     report_file_path: Path | None = None

@@ -14,7 +14,7 @@ def evaluate_submission(
     grading_config: dict,
     upload_dir: Path | str
 ) -> SubmissionData:
-    """evalutes the processed/sorted data. Calculates coding standard, and requirements score and creates
+    """evaluates the processed/sorted data. Calculates coding standard, and requirements score and creates
     other metrics for the grade report and data records.
 
     Args:
@@ -32,7 +32,9 @@ def evaluate_submission(
     coding_stds_dict = grading_config.get("criteria_ratings", {}).get("coding_standards", {})
     req_dict = grading_config.get("criteria_ratings", {}).get("requirements", {})
     run_dict = grading_config.get("criteria_ratings", {}).get("runtime", {})
+    eff_dict = grading_config.get("criteria_rating", {}).get("efficiency", {})
     weights_dict = grading_config.get("weights", {})
+    top_n_error_num = grading_config.get("top_n_errors", 3)
     
     cs_processed = processed_data.cs_processed
     pmd_processed = processed_data.pmd_processed
@@ -53,23 +55,27 @@ def evaluate_submission(
     )
     
     coding_std_score = _calculate_coding_stds_score(cs_score, pmd_score)
+    
     req_score, junit_test_count, junit_failed_test_count = _calculate_requirements_score(
         junit_processed, 
         req_dict
     )
-    # run_score, run_ratio = calculate_runtime_score(processed_runtime_data, run_dict)
-    run_score = run_dict.get("excellent", 20)
     
-    overall_score = coding_std_score + req_score + run_score
+    # run_score, run_ratio = calculate_runtime_score(processed_runtime_data, run_dict)
+    # TODO: dynamic calculation of runtime and efficiency scores 02/25/2026
+    run_score = run_dict.get("excellent", 20)
+    eff_score = eff_dict.get("excellent", 10)
+    
+    overall_score = coding_std_score + req_score + run_score + eff_score
     overall_weighted_error = cs_weighted_error + pmd_weighted_error
     
     cs_violation_count = cs_processed.get_error_count_within_submission()
     pmd_violation_count = pmd_processed.get_error_count_within_submission()
     
-    top_n_cs_errors = cs_processed.get_top_n_error_types_and_counts_in_subm(3)
-    top_n_pmd_errors = pmd_processed.get_top_n_error_types_and_counts_in_subm(3)
+    top_n_cs_errors = cs_processed.get_top_n_error_types_and_counts_in_subm(top_n_error_num)
+    top_n_pmd_errors = pmd_processed.get_top_n_error_types_and_counts_in_subm(top_n_error_num)
     
-    upload_dir_name = upload_dir.name
+    upload_dir_name = upload_dir.name # ..../CodeInspector/Assignment_1
     
     cs_sev_counts = cs_processed.get_severity_counts()
     pmd_sev_counts = pmd_processed.get_severity_counts()
@@ -91,6 +97,8 @@ def evaluate_submission(
         junit_failed_test_count,
         coding_std_score,
         req_score,
+        eff_score,
+        run_score,
         overall_score,
         overall_weighted_error,
         top_n_cs_errors,
@@ -176,10 +184,11 @@ def _calculate_requirements_score(
     test_success_ratio = 1 - round((number_of_failed_tests / number_of_tests), 1)
     # 5/11 = 0.4545
     # 0.5
+    # TODO: Make sure this behaves as expected 02/28/2026
     
     for score_ratio in possible_score_ratios:
         if test_success_ratio >= score_ratio:
-            req_score = score_ratio * max_score
+            req_score = int(score_ratio * max_score)
     
     return req_score, number_of_tests, number_of_failed_tests
 

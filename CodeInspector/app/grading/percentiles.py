@@ -59,17 +59,16 @@ def compare_score_with_self_global(
         student_data = assignment_data.get(student_email, {})    
         
         if not student_data:
-            print(f"No data for {student_email} under assignment {assignment}")
-            continue
+            print(
+                f"No data for {student_email} under assignment {assignment}. The error density of the final submission for this assignment is defaulted to the one of the current submission")
+            submission_error_density = error_density # default the error density score to the one of the current submission
         
-        final_submission = student_data[len(student_data) - 1] # get the last submission of the student
-        submission_error_density = final_submission.get("error density", None)
+        else :
+            final_submission = student_data[len(student_data) - 1] # get the last submission of the student
+            submission_error_density = final_submission.get("error density", submission_error_density)
             
-        if submission_error_density is not None:
-            error_density_list.append(submission_error_density)        
-            
-    print(f"error density list: {error_density_list}")
-    
+        error_density_list.append(submission_error_density)        
+                
     if len(error_density_list) < 1: # if this is the first assignment of the student
         return
     
@@ -77,9 +76,9 @@ def compare_score_with_self_global(
     average_error_density = round(sum(error_density_list) / len(error_density_list), precision_ed)
     # relative change compared to the final submission of the previous assignment
     density_of_first_submission = round(error_density_list[0], precision_ed)
-    relative_change_to_first = round(error_density / density_of_first_submission, precision_ed) * 100
+    relative_change_to_first = abs((1 - round(error_density / density_of_first_submission, precision_ed)) * 100)
     density_of_last_submission = round(error_density_list[(len(error_density_list) - 1)], precision_ed)
-    relative_change_to_last = round(error_density / density_of_last_submission, precision_ed) * 100
+    relative_change_to_last = abs((1 - round(error_density / density_of_last_submission, precision_ed)) * 100)
     assignment_number = len(error_density_list)
     
     return  (
@@ -132,18 +131,15 @@ def compare_score_with_self(
     for record in student_data: # iterate over all submission records of student for this assignment
         error_density_list.append(record.get("error density", 0))
     
-    if len(error_density_list) <= 1: # if this is the first submission for this assignment
-        return
-    
     # average recorded error density across all submissions the student made for this assignment
     average_error_density = round(sum(error_density_list) / len(error_density_list), precision_ed)
     # relative change compared to the last submission
     density_of_first_submission = round(error_density_list[0], precision_ed)
-    relative_change_to_first = round(error_density / density_of_first_submission, precision_ed) * 100
+    relative_change_to_first = abs((1 - round(error_density / density_of_first_submission, precision_ed)) * 100)
     density_of_last_submission = round(error_density_list[(len(error_density_list) - 1)], precision_ed)
-    relative_change_to_last = round(error_density / density_of_last_submission, precision_ed) * 100
-    submission_number = len(error_density_list)
-    
+    relative_change_to_last = abs((1 - round(error_density / density_of_last_submission, precision_ed)) * 100)
+    submission_number = student_data[len(student_data) - 1].get("counter") + 1 # get the number of the last submission and increment it
+    print(f"Submission number: {submission_number}")
     return  (
                 average_error_density, density_of_last_submission, 
                 density_of_first_submission, relative_change_to_last,  
@@ -156,7 +152,7 @@ def compare_score_with_class(
     records: dict,
     grading_config: dict
 ) -> tuple[float, float]:
-    """Compares the score of the current submission to submissions made by 
+    """Compares the score of the current submission to final submissions made by 
     all other class members for the same assignment
 
     Args:

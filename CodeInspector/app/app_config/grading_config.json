@@ -31,11 +31,19 @@
             "good": 16,
             "satisfactory": 12,
             "unsatisfactory": 8
+        },
+        "efficiency": {
+            "excellent": 10,
+            "good": 8,
+            "satisfactory": 6,
+            "unsatisfactory": 2
         }
     },
     "system_decimal_precision": {
         "error_density": 4,
         "percentile_score": 2,
         "percent_value": 2
-    }
+    },
+    "max_submissions_per_assignment": 10,
+    "top_n_errors": 3
 }
