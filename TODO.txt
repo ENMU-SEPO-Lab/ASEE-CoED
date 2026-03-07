@@ -1,0 +1,13 @@
+TODO:
+
+- Abort pipeline if criteria not met (e.g. no author, no upload dir)
+- Runtime score metrics and calculation
+- round up weighted error density for all
+- create a method that compares student performance to all final weighted error density of different submissions for the same student
+- update the method that compare students current submission to class wide submission of different assignments, but consider only the final submissions
+
+
+Future objectives:
+
+- API implementation
+- Exposure to web address
