@@ -69,7 +69,7 @@ jobs:
             unzip pmd-dist-7.0.0-bin.zip && \ 
             mv pmd-bin-7.0.0 pmd \
             echo "Check if the pmd dir is created" \
-            ls -l pmd/bin || echo "pmd dir not found"
+            ls -l pmd/bin || echo "pmd/bin directory not found"
           )
 
       # Download Checkstyle if missing
@@ -114,7 +114,7 @@ jobs:
       - name: Run PMD
         run: |
           mkdir -p reports
-          ./pmd/bin/./pmd check \
+          ./pmd/bin/pmd check \
             -d upload_here \
             -R category/java/bestpractices.xml \
             -f xml \
