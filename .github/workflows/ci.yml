@@ -69,7 +69,6 @@ jobs:
             unzip pmd-dist-7.0.0-bin.zip && \
             mv pmd-bin-7.0.0 pmd \
           )
-      
 
       # Download Checkstyle if missing
       - name: Download Checkstyle
@@ -122,6 +121,19 @@ jobs:
       #     else
       #       echo "grade.py not found, skipping grading"
       #     fi
+
+      - name: Cache venv
+        uses: actions/cache@v3
+        id: cache-venv
+        with:
+          path: .venv
+          key:  ${{ runner.os }}-venv-${{ hashFiles('requirements.txt') }}
+
+      - name: Create and install venv
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements.txt
 
     # Run grading script
       - name: Run grading script
