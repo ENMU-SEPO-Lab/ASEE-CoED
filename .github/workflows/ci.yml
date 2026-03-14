@@ -105,11 +105,14 @@ jobs:
             --details tree \
             | tee reports/junit/junit-report.txt
 
+      # - name: Debug directory structure
+      #   run: find  -maxdepth 3
+
       # Run PMD
       - name: Run PMD
         run: |
           mkdir -p reports
-          ./pmd/bin/pmd check \
+          ./pmd/bin/./pmd check \
             -d upload_here \
             -R category/java/bestpractices.xml \
             -f xml \
