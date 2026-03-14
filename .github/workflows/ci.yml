@@ -113,7 +113,7 @@ jobs:
             -d upload_here \
             -R category/java/bestpractices.xml \
             -f xml \
-            -r reports/pmd.xml || true
+            -r reports/pmd.xml
 
       # Run Checkstyle
       - name: Run Checkstyle
