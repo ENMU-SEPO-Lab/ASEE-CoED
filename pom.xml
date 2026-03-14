@@ -13,7 +13,6 @@
     </properties>
 
     <dependencies>
-        <!-- JUnit & Hamcrest -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -24,7 +23,36 @@
 
     <build>
         <plugins>
-            <!-- PMD -->
+            <!-- IMPORTANT: Tells Maven to look in your custom folders -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals><goal>add-source</goal></goals>
+                        <configuration>
+                            <sources>
+                                <source>upload_here</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-test-source</id>
+                        <phase>generate-test-sources</phase>
+                        <goals><goal>add-test-source</goal></goals>
+                        <configuration>
+                            <sources>
+                                <source>test</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- PMD Analysis -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
@@ -37,13 +65,13 @@
                 </configuration>
             </plugin>
 
-            <!-- Checkstyle -->
+            <!-- Checkstyle Analysis -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>3.3.1</version>
                 <configuration>
-                    <config_location>google_checks.xml</config_location>
+                    <configLocation>google_checks.xml</configLocation>
                     <failOnViolation>false</failOnViolation>
                 </configuration>
             </plugin>
