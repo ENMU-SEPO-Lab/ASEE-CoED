@@ -113,13 +113,22 @@ jobs:
             -o reports/checkstyle.xml \
             upload_here || true
 
-      # Run grading script
+      # # Run grading script
+      # - name: Run grading script
+      #   run: |
+      #     if [ -f grade.py ]; then
+      #       python grade.py
+      #     else
+      #       echo "grade.py not found, skipping grading"
+      #     fi
+
+    # Run grading script
       - name: Run grading script
         run: |
-          if [ -f grade.py ]; then
-            python grade.py
+          if [ -f CodeInspector/main.py ]; then
+            python CodeInspector/main.py
           else
-            echo "grade.py not found, skipping grading"
+            echo "CodeInspector/main.py not found, skipping grading"
           fi
 
       # Upload reports
