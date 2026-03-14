@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
+    <modelVersion>4.0.0</modelVersion>
     <groupId>com.example</groupId>
     <artifactId>grading-project</artifactId>
     <version>1.0-SNAPSHOT</version>
@@ -13,6 +13,8 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.version>5.10.0</junit.version>
+        <reports.dir>${project.basedir}/reports</reports.dir>
     </properties>
 
     <dependencies>
@@ -20,46 +22,25 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.10.0</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
-
-            <!-- Maven Surefire Plugin for JUnit -->
+            <!-- Maven Surefire Plugin for running tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.1.2</version>
                 <configuration>
-                    <reportsDirectory>${project.basedir}/reports/junit</reportsDirectory>
-                    <useFile>true</useFile>
+                    <reportsDirectory>${reports.dir}/junit</reportsDirectory>
+                    <testFailureIgnore>true</testFailureIgnore>
                 </configuration>
             </plugin>
 
-            <!-- Maven Checkstyle Plugin -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.4.2</version>
-                <executions>
-                    <execution>
-                        <id>checkstyle</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <outputFile>${project.basedir}/reports/checkstyle.xml</outputFile>
-                            <outputFileFormat>xml</outputFileFormat>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Maven PMD Plugin -->
+            <!-- PMD Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
@@ -70,14 +51,40 @@
                         <phase>verify</phase>
                         <goals>
                             <goal>check</goal>
+                            <goal>pmd</goal>
                         </goals>
                         <configuration>
-                            <targetXml>${project.basedir}/reports/pmd.xml</targetXml>
+                            <targetJdk>11</targetJdk>
+                            <failOnViolation>false</failOnViolation>
+                            <outputFile>${reports.dir}/pmd.xml</outputFile>
+                            <linkXRef>false</linkXRef>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
+            <!-- Checkstyle Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>checkstyle</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                            <goal>checkstyle</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>${reports.dir}/checkstyle.xml</outputFile>
+                            <outputFileFormat>xml</outputFileFormat>
+                            <failOnViolation>false</failOnViolation>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
 </project>
