@@ -19,7 +19,7 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
-      # This action handles caching of Gradle dependencies automatically
+      # Automatically handles caching of Gradle and dependencies
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
@@ -29,12 +29,14 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      # Run Compilation, Tests, PMD, and Checkstyle
-      # --no-daemon saves memory on CI runners
+      # Fixes permissions for the runner
+      - name: Grant execute permission
+        run: chmod +x gradlew
+
+      # Build and Test (using --no-daemon to save runner memory)
       - name: Build and Check
         run: ./gradlew build pmdMain checkstyleMain --no-daemon
 
-      # Run your custom grading script
       - name: Run grading script
         if: always()
         run: |
@@ -42,16 +44,14 @@ jobs:
             python grade.py
           fi
 
-      # Upload Reports (Gradle puts them in build/reports)
-      - name: Upload grading feedback
+      - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: grading-reports
           path: build/reports/
-          retention-days: 5
+          retention-days: 5 # Saves your GitHub storage quota
 
-      # Email Feedback to Student
       - name: Send Feedback Email
         if: always()
         env:
@@ -63,7 +63,8 @@ jobs:
           from email.message import EmailMessage
           from pathlib import Path
 
-          student_email = "essa.imhmed@enmu.edu" # Fallback
+          # Find student email from @author tag
+          student_email = "essa.imhmed@enmu.edu"
           for java_file in Path('upload_here').rglob('*.java'):
               with open(java_file, 'r') as f:
                   match = re.search(r'@author\s+([^\s]+)', f.read())
@@ -77,8 +78,8 @@ jobs:
           msg['To'] = student_email
           msg.set_content("Hello,\n\nYour automated grading feedback is attached.\n\nRegards,\nDr. Imhmed")
 
-          # Gradle places XML/HTML reports in build/reports/
-          feedback = Path("build/reports/feedback.md") 
+          # Attach feedback (Looks in Gradle's build folder first)
+          feedback = Path("build/reports/feedback.md")
           if not feedback.exists():
               feedback = Path("reports/feedback.md")
 
@@ -91,7 +92,7 @@ jobs:
                   server.starttls()
                   server.login(os.environ['GMAIL_USER'], os.environ['GMAIL_APP_PASSWORD'])
                   server.send_message(msg)
-              print(f"Email sent to {student_email}")
+              print(f"Email successfully sent to {student_email}")
           except Exception as e:
               print(f"Email failed: {e}")
           EOF

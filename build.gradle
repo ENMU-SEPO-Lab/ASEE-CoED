@@ -12,40 +12,32 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
 }
 
-// Tell Gradle where your custom folders are
+// Maps your custom student and test folders
 sourceSets {
-    main {
-        java { srcDirs = ['upload_here'] }
-    }
-    test {
-        java { srcDirs = ['test'] }
-    }
+    main { java { srcDirs = ['upload_here'] } }
+    test { java { srcDirs = ['test'] } }
 }
 
 java {
     toolchain { languageVersion = JavaLanguageVersion.of(11) }
 }
 
-// Configure PMD
+// Quality checks (configured to not crash if students make mistakes)
 pmd {
     consoleOutput = true
     toolVersion = "7.0.0"
     ruleSets = ["category/java/bestpractices.xml"]
-    ignoreFailures = true // Don't stop the build on violations
+    ignoreFailures = true 
 }
 
-// Configure Checkstyle
 checkstyle {
     toolVersion = "10.12.4"
     configFile = file("google_checks.xml")
-    ignoreFailures = true // Don't stop the build on violations
+    ignoreFailures = true
 }
 
-// Configure Tests to handle timeouts/infinite loops
 test {
-    ignoreFailures = true // Continue to grading even if tests fail
-    timeout = Duration.ofSeconds(10) // Kill any test that takes > 10s
+    ignoreFailures = true
+    // Safety: Kills any test that takes > 15 seconds to save resources
+    timeout = java.time.Duration.ofSeconds(15) 
 }
-
-// Ensure PMD and Checkstyle run during the build
-check.dependsOn pmdMain, checkstyleMain
