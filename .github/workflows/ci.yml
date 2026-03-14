@@ -1,6 +1,6 @@
 name: Java AutoGrader CI
 
-# Trigger only when push affects 'upload_here/' or manually
+# Trigger only when push affects 'Upload_here/' or manually
 on:
   push:
     paths:
@@ -78,7 +78,7 @@ jobs:
       # Compile student code (cached build will skip unchanged)
       - name: Compile Student Code
         run: |
-          find upload_here -name "*.java" | xargs javac -d build
+          find Upload_here -name "*.java" | xargs javac -d build
 
       # Compile tests
       - name: Compile Tests
@@ -99,7 +99,7 @@ jobs:
         run: |
           mkdir -p reports
           ./pmd/bin/run.sh pmd check \
-            -d upload_here \
+            -d Upload_here \
             -R category/java/bestpractices.xml \
             -f xml \
             -r reports/pmd.xml || true
@@ -111,7 +111,7 @@ jobs:
             -c /google_checks.xml \
             -f xml \
             -o reports/checkstyle.xml \
-            upload_here || true
+            Upload_here || true
 
       # # Run grading script
       # - name: Run grading script
@@ -155,7 +155,7 @@ jobs:
           gmail_user = os.environ['GMAIL_USER']
           gmail_pass = os.environ['GMAIL_APP_PASSWORD']
 
-          java_files = Path('upload_here').glob('*.java')
+          java_files = Path('Upload_here').glob('*.java')
           student_email = None
 
           for java_file in java_files:
