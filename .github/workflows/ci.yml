@@ -139,6 +139,7 @@ jobs:
       - name: Run grading script
         run: |
           if [ -f CodeInspector/main.py ]; then
+            source .venv/bin/activate
             python CodeInspector/main.py
           else
             echo "CodeInspector/main.py not found, skipping grading"
