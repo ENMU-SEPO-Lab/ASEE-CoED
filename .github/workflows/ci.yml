@@ -18,7 +18,7 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-          cache: 'maven' # This is the magic line that saves resources
+          cache: 'maven'
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -26,29 +26,28 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      # 1. Compile, Test, PMD, and Checkstyle in ONE command
-      # -B: Batch mode (less logging)
-      # -Dno-transfer-progress: Hide download progress bars to save log space
+      # Run Maven - we force it to continue even if tests fail/timeout
       - name: Build and Run Quality Checks
-        run: mvn -B clean verify pmd:pmd checkstyle:checkstyle -Dno-transfer-progress
+        run: mvn -B clean verify pmd:pmd checkstyle:checkstyle -Dno-transfer-progress -Dmaven.test.failure.ignore=true
 
-      # 2. Run your custom grading script
+      # Run your grading script (this consumes the Maven XML reports)
       - name: Run grading script
+        if: always()
         run: |
           if [ -f grade.py ]; then
             python grade.py
           fi
 
-      # 3. Upload Reports (Maven puts them in the 'target' folder)
+      # Upload Reports
       - name: Upload grading feedback
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: grading-reports
-          path: target/*.xml
+          path: target/
           retention-days: 5
 
-      # 4. Email Feedback
+      # Email Feedback to Student
       - name: Send Feedback Email
         if: always()
         env:
@@ -60,9 +59,8 @@ jobs:
           from email.message import EmailMessage
           from pathlib import Path
 
-          # Find student email from @author tag
-          student_email = "essa.imhmed@enmu.edu" # Default
-          for java_file in Path('.').rglob('*.java'):
+          student_email = "essa.imhmed@enmu.edu" # Fallback
+          for java_file in Path('upload_here').rglob('*.java'):
               with open(java_file, 'r') as f:
                   match = re.search(r'@author\s+([^\s]+)', f.read())
                   if match:
@@ -75,13 +73,21 @@ jobs:
           msg['To'] = student_email
           msg.set_content("Hello,\n\nYour automated grading feedback is attached.\n\nRegards,\nDr. Imhmed")
 
-          feedback = Path("target/feedback.md") # Assuming grade.py outputs here
+          # Attach feedback (Assuming grade.py creates target/feedback.md)
+          feedback = Path("target/feedback.md") 
+          if not feedback.exists(): # Check fallback location if target/ isn't used
+              feedback = Path("reports/feedback.md")
+
           if feedback.exists():
               with open(feedback,'rb') as f:
                   msg.add_attachment(f.read(), maintype='text', subtype='plain', filename='feedback.md')
 
-          with smtplib.SMTP('smtp.gmail.com', 587) as server:
-              server.starttls()
-              server.login(os.environ['GMAIL_USER'], os.environ['GMAIL_APP_PASSWORD'])
-              server.send_message(msg)
+          try:
+              with smtplib.SMTP('smtp.gmail.com', 587) as server:
+                  server.starttls()
+                  server.login(os.environ['GMAIL_USER'], os.environ['GMAIL_APP_PASSWORD'])
+                  server.send_message(msg)
+              print(f"Email successfully sent to {student_email}")
+          except Exception as e:
+              print(f"Failed to send email: {e}")
           EOF

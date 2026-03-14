@@ -23,7 +23,7 @@
 
     <build>
         <plugins>
-            <!-- IMPORTANT: Tells Maven to look in your custom folders -->
+            <!-- 1. Map custom folders -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -34,9 +34,7 @@
                         <phase>generate-sources</phase>
                         <goals><goal>add-source</goal></goals>
                         <configuration>
-                            <sources>
-                                <source>upload_here</source>
-                            </sources>
+                            <sources><source>upload_here</source></sources>
                         </configuration>
                     </execution>
                     <execution>
@@ -44,28 +42,34 @@
                         <phase>generate-test-sources</phase>
                         <goals><goal>add-test-source</goal></goals>
                         <configuration>
-                            <sources>
-                                <source>test</source>
-                            </sources>
+                            <sources><source>test</source></sources>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- PMD Analysis -->
+            <!-- 2. Ignore Test Failures/Timeouts so grading continues -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <testFailureIgnore>true</testFailureIgnore>
+                </configuration>
+            </plugin>
+
+            <!-- 3. PMD Analysis -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
                 <version>3.21.2</version>
                 <configuration>
-                    <rulesets>
-                        <ruleset>category/java/bestpractices.xml</ruleset>
-                    </rulesets>
+                    <rulesets><ruleset>category/java/bestpractices.xml</ruleset></rulesets>
                     <failOnViolation>false</failOnViolation>
                 </configuration>
             </plugin>
 
-            <!-- Checkstyle Analysis -->
+            <!-- 4. Checkstyle Analysis -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
