@@ -1,0 +1,51 @@
+plugins {
+    id 'java'
+    id 'pmd'
+    id 'checkstyle'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+}
+
+// Tell Gradle where your custom folders are
+sourceSets {
+    main {
+        java { srcDirs = ['upload_here'] }
+    }
+    test {
+        java { srcDirs = ['test'] }
+    }
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(11) }
+}
+
+// Configure PMD
+pmd {
+    consoleOutput = true
+    toolVersion = "7.0.0"
+    ruleSets = ["category/java/bestpractices.xml"]
+    ignoreFailures = true // Don't stop the build on violations
+}
+
+// Configure Checkstyle
+checkstyle {
+    toolVersion = "10.12.4"
+    configFile = file("google_checks.xml")
+    ignoreFailures = true // Don't stop the build on violations
+}
+
+// Configure Tests to handle timeouts/infinite loops
+test {
+    ignoreFailures = true // Continue to grading even if tests fail
+    timeout = Duration.ofSeconds(10) // Kill any test that takes > 10s
+}
+
+// Ensure PMD and Checkstyle run during the build
+check.dependsOn pmdMain, checkstyleMain
