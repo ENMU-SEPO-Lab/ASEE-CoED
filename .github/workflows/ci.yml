@@ -1,6 +1,6 @@
 name: Java AutoGrader CI
 
-# Trigger only on pull requests or manual runs
+# Trigger on pull requests or manual runs
 on:
   pull_request:
     branches: [ main ]
@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,21 +22,11 @@ jobs:
           distribution: temurin
           java-version: 11
 
-      # Setup Python
+      # Setup Python 3.11
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      # Cache dependencies (JUnit, Hamcrest, PMD, Checkstyle)
-      - name: Cache grading tools
-        uses: actions/cache@v3
-        with:
-          path: |
-            lib
-            pmd
-            checkstyle.jar
-          key: ${{ runner.os }}-grading-tools
 
       # Install utilities
       - name: Install wget unzip
@@ -51,26 +40,30 @@ jobs:
           mkdir -p reports/junit
           mkdir -p pmd
 
-      # Download JUnit 4 (cached)
-      - name: Download JUnit
-        if: !hashFiles('lib/junit-4.13.2.jar')
-        run: |
-          wget -O lib/junit-4.13.2.jar \
-          https://search.maven.org/remotecontent?filepath=junit/junit/4.13.2/junit-4.13.2.jar
+      # Cache JUnit & Hamcrest
+      - name: Cache JUnit & Hamcrest
+        uses: actions/cache@v3
+        with:
+          path: lib
+          key: ${{ runner.os }}-junit-hamcrest
 
-      # Download Hamcrest (cached)
-      - name: Download Hamcrest
-        if: !hashFiles('lib/hamcrest-core-1.3.jar')
+      # Download JUnit & Hamcrest if missing
+      - name: Download JUnit & Hamcrest
         run: |
-          wget -O lib/hamcrest-core-1.3.jar \
-          https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
+          [ -f lib/junit-4.13.2.jar ] || wget -O lib/junit-4.13.2.jar https://search.maven.org/remotecontent?filepath=junit/junit/4.13.2/junit-4.13.2.jar
+          [ -f lib/hamcrest-core-1.3.jar ] || wget -O lib/hamcrest-core-1.3.jar https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
 
-      # Download JUnit Console Runner (cached)
+      # Cache JUnit Console Runner
+      - name: Cache JUnit Console
+        uses: actions/cache@v3
+        with:
+          path: junit-console.jar
+          key: ${{ runner.os }}-junit-console
+
+      # Download JUnit Console Runner if missing
       - name: Download JUnit Console
-        if: !hashFiles('junit-console.jar')
         run: |
-          wget -O junit-console.jar \
-          https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.2/junit-platform-console-standalone-1.10.2.jar
+          [ -f junit-console.jar ] || wget -O junit-console.jar https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.2/junit-platform-console-standalone-1.10.2.jar
 
       # Compile student code
       - name: Compile Student Code
@@ -91,13 +84,21 @@ jobs:
             --reports-dir reports/junit \
             --include-classname .*Test
 
-      # Download PMD (cached)
+      # Cache PMD
+      - name: Cache PMD
+        uses: actions/cache@v3
+        with:
+          path: pmd
+          key: ${{ runner.os }}-pmd
+
+      # Download PMD if missing
       - name: Download PMD
-        if: !hashFiles('pmd/bin/run.sh')
         run: |
-          wget https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-dist-7.0.0-bin.zip
-          unzip pmd-dist-7.0.0-bin.zip
-          mv pmd-bin-7.0.0 pmd
+          [ -f pmd/bin/run.sh ] || (
+            wget https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-dist-7.0.0-bin.zip
+            unzip pmd-dist-7.0.0-bin.zip
+            mv pmd-bin-7.0.0 pmd
+          )
 
       # Run PMD
       - name: Run PMD
@@ -109,12 +110,17 @@ jobs:
             -f xml \
             -r reports/pmd.xml || true
 
-      # Download Checkstyle (cached)
+      # Cache Checkstyle
+      - name: Cache Checkstyle
+        uses: actions/cache@v3
+        with:
+          path: checkstyle.jar
+          key: ${{ runner.os }}-checkstyle
+
+      # Download Checkstyle if missing
       - name: Download Checkstyle
-        if: !hashFiles('checkstyle.jar')
         run: |
-          wget https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.12.4/checkstyle-10.12.4-all.jar
-          mv checkstyle-10.12.4-all.jar checkstyle.jar
+          [ -f checkstyle.jar ] || wget -O checkstyle.jar https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.12.4/checkstyle-10.12.4-all.jar
 
       # Run Checkstyle
       - name: Run Checkstyle
@@ -128,11 +134,11 @@ jobs:
       # Run grading script
       - name: Run grading script
         run: |
-            if [ -f grade.py ]; then
-                python grade.py
-            else
-                echo "grade.py not found, skipping grading"
-            fi
+          if [ -f grade.py ]; then
+            python grade.py
+          else
+            echo "grade.py not found, skipping grading"
+          fi
 
       # Upload reports
       - name: Upload grading feedback
@@ -188,5 +194,6 @@ jobs:
               server.starttls()
               server.login(gmail_user,gmail_pass)
               server.send_message(msg)
+
           print("Email sent.")
           EOF
