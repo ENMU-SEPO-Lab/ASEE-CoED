@@ -1,4 +1,4 @@
-name: Java AutoGrader CI (Gradle Optimized)
+name: Java AutoGrader CI (Maven Optimized)
 
 on:
   push:
@@ -13,15 +13,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 11
+      - name: Set up JDK 11 & Maven Cache
         uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
-
-      # Automatically handles caching of Gradle and dependencies
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+          cache: 'maven' # Automatically saves/restores dependencies
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -29,13 +26,11 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      # Fixes permissions for the runner
-      - name: Grant execute permission
-        run: chmod +x gradlew
-
-      # Build and Test (using --no-daemon to save runner memory)
-      - name: Build and Check
-        run: ./gradlew build pmdMain checkstyleMain --no-daemon
+      # Run Maven (Clean, Compile, Test, PMD, Checkstyle)
+      # -B: Batch mode (cleaner logs)
+      # -Dmaven.test.failure.ignore=true: Backup safety to ensure grading happens
+      - name: Build and Run Quality Checks
+        run: mvn -B clean verify pmd:pmd checkstyle:checkstyle -Dno-transfer-progress -Dmaven.test.failure.ignore=true
 
       - name: Run grading script
         if: always()
@@ -44,13 +39,13 @@ jobs:
             python grade.py
           fi
 
-      - name: Upload reports
+      - name: Upload Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: grading-reports
-          path: build/reports/
-          retention-days: 5 # Saves your GitHub storage quota
+          path: target/
+          retention-days: 5
 
       - name: Send Feedback Email
         if: always()
@@ -63,8 +58,7 @@ jobs:
           from email.message import EmailMessage
           from pathlib import Path
 
-          # Find student email from @author tag
-          student_email = "essa.imhmed@enmu.edu"
+          student_email = "essa.imhmed@enmu.edu" # Fallback
           for java_file in Path('upload_here').rglob('*.java'):
               with open(java_file, 'r') as f:
                   match = re.search(r'@author\s+([^\s]+)', f.read())
@@ -78,8 +72,8 @@ jobs:
           msg['To'] = student_email
           msg.set_content("Hello,\n\nYour automated grading feedback is attached.\n\nRegards,\nDr. Imhmed")
 
-          # Attach feedback (Looks in Gradle's build folder first)
-          feedback = Path("build/reports/feedback.md")
+          # Maven puts reports in the target/ folder
+          feedback = Path("target/feedback.md") 
           if not feedback.exists():
               feedback = Path("reports/feedback.md")
 
@@ -94,5 +88,5 @@ jobs:
                   server.send_message(msg)
               print(f"Email successfully sent to {student_email}")
           except Exception as e:
-              print(f"Email failed: {e}")
+              print(f"Failed to send email: {e}")
           EOF
