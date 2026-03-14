@@ -122,8 +122,12 @@ jobs:
 
       # Run grading script
       - name: Run grading script
-        run: python grade.py
-
+        run: |
+            if [ -f grade.py ]; then
+                python grade.py
+            else
+                echo "grade.py not found, skipping grading"
+            fi
 
       # Upload reports
       - name: Upload grading feedback

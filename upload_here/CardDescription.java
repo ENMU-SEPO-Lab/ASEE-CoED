@@ -1,7 +1,7 @@
 import java.util.Scanner;
 
 /**
- * @author Essa Imhmed
+ * @author essa.imhmed
  * This program converts shorthand card notation into full card descriptions.
  */
 public class CardDescription {
