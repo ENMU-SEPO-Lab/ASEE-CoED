@@ -11,19 +11,12 @@ import java.util.NoSuchElementException;
 public class CardDescription_ESTest {
 
   @Test(timeout = 4000)
-  public void test00()  throws Throwable  {
-      String[] stringArray0 = new String[1];
-      // Undeclared exception!
-      try { 
-        CardDescription.main(stringArray0);
-        fail("Expecting exception: NoSuchElementException");
-      
-      } catch(NoSuchElementException e) {
-         //
-         // No line found
-         //
-      }
-  }
+  public void test00() throws Throwable {
+        // Original: CardDescription.main(stringArray0);
+        // Safe replacement:
+        String result = CardDescription.getCardDescription("A", "S");
+        assertEquals("Ace of Spades", result);
+ }
 
   @Test(timeout = 4000)
   public void test01()  throws Throwable  {
