@@ -2,7 +2,7 @@ name: Java AutoGrader CI
 
 # Trigger on pull requests or manual runs
 on:
-  pull_request:
+  push:
     branches: [ main ]
   workflow_dispatch:
 
