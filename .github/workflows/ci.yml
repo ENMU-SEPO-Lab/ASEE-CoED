@@ -1,9 +1,8 @@
 name: Java AutoGrader CI
 
-# Trigger on pushes to upload_here or manual runs
+# Trigger only when push affects 'upload_here/' or manually
 on:
   push:
-    branches: [ main ]
     paths:
       - 'upload_here/**'
   workflow_dispatch:
@@ -30,8 +29,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      # Install utilities
-      - name: Install wget unzip
+      # Install minimal utilities
+      - name: Install wget & unzip
         run: sudo apt-get update && sudo apt-get install -y wget unzip
 
       # Prepare folders
@@ -39,12 +38,17 @@ jobs:
         run: |
           mkdir -p lib build reports/junit pmd
 
-      # Cache JUnit & Hamcrest
-      - name: Cache JUnit & Hamcrest
+      # Cache all grading tools and compiled classes
+      - name: Cache grading tools and compiled classes
         uses: actions/cache@v3
         with:
-          path: lib
-          key: ${{ runner.os }}-junit-hamcrest
+          path: |
+            lib
+            junit-console.jar
+            pmd
+            checkstyle.jar
+            build
+          key: ${{ runner.os }}-grading-tools-v1
 
       # Download JUnit & Hamcrest if missing
       - name: Download JUnit & Hamcrest
@@ -52,19 +56,26 @@ jobs:
           [ -f lib/junit-4.13.2.jar ] || wget -O lib/junit-4.13.2.jar https://search.maven.org/remotecontent?filepath=junit/junit/4.13.2/junit-4.13.2.jar
           [ -f lib/hamcrest-core-1.3.jar ] || wget -O lib/hamcrest-core-1.3.jar https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
 
-      # Cache JUnit Console Runner
-      - name: Cache JUnit Console
-        uses: actions/cache@v3
-        with:
-          path: junit-console.jar
-          key: ${{ runner.os }}-junit-console
-
       # Download JUnit Console Runner if missing
       - name: Download JUnit Console
         run: |
           [ -f junit-console.jar ] || wget -O junit-console.jar https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.2/junit-platform-console-standalone-1.10.2.jar
 
-      # Compile student code
+      # Download PMD if missing
+      - name: Download PMD
+        run: |
+          [ -f pmd/bin/run.sh ] || ( \
+            wget https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-dist-7.0.0-bin.zip && \
+            unzip pmd-dist-7.0.0-bin.zip && \
+            mv pmd-bin-7.0.0 pmd \
+          )
+
+      # Download Checkstyle if missing
+      - name: Download Checkstyle
+        run: |
+          [ -f checkstyle.jar ] || wget -O checkstyle.jar https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.12.4/checkstyle-10.12.4-all.jar
+
+      # Compile student code (cached build will skip unchanged)
       - name: Compile Student Code
         run: |
           find upload_here -name "*.java" | xargs javac -d build
@@ -74,7 +85,7 @@ jobs:
         run: |
           find test -name "*.java" | xargs javac -cp "build:lib/*" -d build
 
-      # Run JUnit tests and generate XML reports
+      # Run JUnit tests
       - name: Run JUnit Tests
         run: |
           java -jar junit-console.jar \
@@ -82,22 +93,6 @@ jobs:
             --scan-class-path \
             --reports-dir reports/junit \
             --include-classname .*Test
-
-      # Cache PMD
-      - name: Cache PMD
-        uses: actions/cache@v3
-        with:
-          path: pmd
-          key: ${{ runner.os }}-pmd
-
-      # Download PMD if missing
-      - name: Download PMD
-        run: |
-          [ -f pmd/bin/run.sh ] || (
-            wget https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-dist-7.0.0-bin.zip
-            unzip pmd-dist-7.0.0-bin.zip
-            mv pmd-bin-7.0.0 pmd
-          )
 
       # Run PMD
       - name: Run PMD
@@ -108,18 +103,6 @@ jobs:
             -R category/java/bestpractices.xml \
             -f xml \
             -r reports/pmd.xml || true
-
-      # Cache Checkstyle
-      - name: Cache Checkstyle
-        uses: actions/cache@v3
-        with:
-          path: checkstyle.jar
-          key: ${{ runner.os }}-checkstyle
-
-      # Download Checkstyle if missing
-      - name: Download Checkstyle
-        run: |
-          [ -f checkstyle.jar ] || wget -O checkstyle.jar https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.12.4/checkstyle-10.12.4-all.jar
 
       # Run Checkstyle
       - name: Run Checkstyle
@@ -146,7 +129,7 @@ jobs:
           name: grading-feedback
           path: reports/
 
-      # Send Feedback Email
+      # Send feedback email
       - name: Send Feedback Email
         if: always()
         env:
