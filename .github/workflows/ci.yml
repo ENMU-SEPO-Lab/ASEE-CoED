@@ -48,7 +48,7 @@ jobs:
             pmd
             checkstyle.jar
             build
-          key: ${{ runner.os }}-grading-tools-v1
+          key: ${{ runner.os }}-grading-tools-v2
 
       # Download JUnit & Hamcrest if missing
       - name: Download JUnit & Hamcrest
@@ -69,6 +69,7 @@ jobs:
             unzip pmd-dist-7.0.0-bin.zip && \
             mv pmd-bin-7.0.0 pmd \
           )
+      
 
       # Download Checkstyle if missing
       - name: Download Checkstyle
