@@ -7,143 +7,73 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest # "ubuntu-slim" isn't a standard GitHub runner; use latest for best compatibility
 
     steps:
-
-      # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-
-      # Setup Java 11
-      - name: Set up Java 11
+      - name: Set up Java & Python
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 11
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'maven' # Built-in caching if you use Maven/Gradle later
 
-
-      # Install utilities
-      - name: Install wget unzip
-        run: sudo apt-get update && sudo apt-get install -y wget unzip
-
-
-      # Prepare folders
-      - name: Prepare folders
-        run: |
-          mkdir -p lib
-          mkdir -p build
-          mkdir -p reports/junit
-
-
-      # Download JUnit 4
-      - name: Download JUnit
-        run: |
-          wget -O lib/junit-4.13.2.jar \
-          https://search.maven.org/remotecontent?filepath=junit/junit/4.13.2/junit-4.13.2.jar
-
-
-      # Download Hamcrest
-      - name: Download Hamcrest
-        run: |
-          wget -O lib/hamcrest-core-1.3.jar \
-          https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
-
-
-      # Download JUnit Console Runner (for XML reports)
-      - name: Download JUnit Console
-        run: |
-          wget -O junit-console.jar \
-          https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.2/junit-platform-console-standalone-1.10.2.jar
-
-
-      # Compile student code
-      - name: Compile Student Code
-        run: |
-          find upload_here -name "*.java" | xargs javac -d build
-
-
-      # Compile tests
-      - name: Compile Tests
-        run: |
-          find test -name "*.java" | xargs javac -cp "build:lib/*" -d build
-
-
-      # Run JUnit tests and generate XML reports
-      - name: Run JUnit Tests
-        run: |
-          java -jar junit-console.jar \
-            --class-path "build:lib/*" \
-            --scan-class-path \
-            --reports-dir reports/junit
-
-
-      # PMD setup
-      - name: Download PMD
-        run: |
-          wget https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-dist-7.0.0-bin.zip
-          unzip pmd-dist-7.0.0-bin.zip
-          mv pmd-bin-7.0.0 pmd
-
-
-      - name: Run PMD
-        run: |
-          mkdir -p reports
-          ./pmd/bin/pmd check \
-            -d upload_here \
-            -R category/java/bestpractices.xml \
-            -f xml \
-            -r reports/pmd.xml || true
-
-
-      # Checkstyle setup
-      - name: Download Checkstyle
-        run: |
-          wget https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.12.4/checkstyle-10.12.4-all.jar
-          mv checkstyle-10.12.4-all.jar checkstyle.jar
-
-
-      - name: Run Checkstyle
-        run: |
-          java -jar checkstyle.jar \
-            -c /google_checks.xml \
-            -f xml \
-            -o reports/checkstyle.xml \
-            upload_here || true
-
-
-      # Python setup
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
-
-      # Run grading script
-      - name: Run grading script
-        run: |
-            if [ -f grade.py ]; then
-                python grade.py
-            else
-                echo "grade.py not found, skipping grading"
-            fi
-
-      # Upload reports
-      - name: Upload grading feedback
-        uses: actions/upload-artifact@v4
+      # CACHE TOOLS: This saves ~30-60 seconds per run
+      - name: Cache External Tools
+        id: cache-tools
+        uses: actions/cache@v4
         with:
-          name: grading-feedback
-          path: reports/
+          path: |
+            lib/
+            pmd/
+            checkstyle.jar
+            junit-console.jar
+          key: ${{ runner.os }}-tools-v1
 
+      - name: Install Utilities & Download Tools
+        if: steps.cache-tools.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update && sudo apt-get install -y wget unzip
+          mkdir -p lib build reports/junit
+          
+          # Download everything in one parallel-friendly block
+          wget -O lib/junit-4.13.2.jar https://search.maven.org/remotecontent?filepath=junit/junit/4.13.2/junit-4.13.2.jar &
+          wget -O lib/hamcrest-core-1.3.jar https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar &
+          wget -O junit-console.jar https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.2/junit-platform-console-standalone-1.10.2.jar &
+          wget https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-dist-7.0.0-bin.zip &
+          wget -O checkstyle.jar https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.12.4/checkstyle-10.12.4-all.jar &
+          wait
+          
+          unzip pmd-dist-7.0.0-bin.zip && mv pmd-bin-7.0.0 pmd
+          rm pmd-dist-7.0.0-bin.zip
 
-      # Email feedback
-      - name: Send Feedback Email
+      - name: Compile and Test
+        run: |
+          mkdir -p build reports/junit
+          find upload_here -name "*.java" | xargs javac -d build
+          find test -name "*.java" | xargs javac -cp "build:lib/*" -d build
+          java -jar junit-console.jar --class-path "build:lib/*" --scan-class-path --reports-dir reports/junit
+
+      - name: Run Static Analysis (PMD & Checkstyle)
+        run: |
+          ./pmd/bin/pmd check -d upload_here -R category/java/bestpractices.xml -f xml -r reports/pmd.xml || true
+          java -jar checkstyle.jar -c /google_checks.xml -f xml -o reports/checkstyle.xml upload_here || true
+
+      - name: Run grading and Email
         if: always()
         env:
           GMAIL_USER: alarusie@gmail.com
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: |
+          [ -f grade.py ] && python grade.py || echo "grade.py missing"
           python <<'EOF'
           import os
           import re
@@ -198,3 +128,10 @@ jobs:
 
           print("Email sent.")
           EOF
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: grading-feedback
+          path: reports/
+          retention-days: 5 # Saves storage space by deleting old reports sooner
