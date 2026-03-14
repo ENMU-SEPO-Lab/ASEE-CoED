@@ -122,6 +122,9 @@ jobs:
       #       echo "grade.py not found, skipping grading"
       #     fi
 
+      - name: Debug directory structure
+        run: find reports -maxdepth 3
+
       - name: Cache venv
         uses: actions/cache@v3
         id: cache-venv
