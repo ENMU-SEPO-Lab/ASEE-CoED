@@ -66,8 +66,10 @@ jobs:
         run: |
           [ -f pmd/bin/run.sh ] || ( \
             wget https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-dist-7.0.0-bin.zip && \
-            unzip pmd-dist-7.0.0-bin.zip && \
+            unzip pmd-dist-7.0.0-bin.zip && \ 
             mv pmd-bin-7.0.0 pmd \
+            echo "Check if the pmd dir is created" \
+            ls -l pmd/bin || echo "pmd dir not found"
           )
 
       # Download Checkstyle if missing
@@ -106,7 +108,7 @@ jobs:
             | tee reports/junit/junit-report.txt
 
       # - name: Debug directory structure
-      #   run: find  -maxdepth 3
+      #   run: find pmd -maxdepth 5
 
       # Run PMD
       - name: Run PMD
