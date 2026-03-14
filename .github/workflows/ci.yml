@@ -1,0 +1,196 @@
+name: Java AutoGrader CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # Setup Java 11
+      - name: Set up Java 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+
+
+      # Install utilities
+      - name: Install wget unzip
+        run: sudo apt-get update && sudo apt-get install -y wget unzip
+
+
+      # Prepare folders
+      - name: Prepare folders
+        run: |
+          mkdir -p lib
+          mkdir -p build
+          mkdir -p reports/junit
+
+
+      # Download JUnit 4
+      - name: Download JUnit
+        run: |
+          wget -O lib/junit-4.13.2.jar \
+          https://search.maven.org/remotecontent?filepath=junit/junit/4.13.2/junit-4.13.2.jar
+
+
+      # Download Hamcrest
+      - name: Download Hamcrest
+        run: |
+          wget -O lib/hamcrest-core-1.3.jar \
+          https://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
+
+
+      # Download JUnit Console Runner (for XML reports)
+      - name: Download JUnit Console
+        run: |
+          wget -O junit-console.jar \
+          https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.2/junit-platform-console-standalone-1.10.2.jar
+
+
+      # Compile student code
+      - name: Compile Student Code
+        run: |
+          find upload_here -name "*.java" | xargs javac -d build
+
+
+      # Compile tests
+      - name: Compile Tests
+        run: |
+          find test -name "*.java" | xargs javac -cp "build:lib/*" -d build
+
+
+      # Run JUnit tests and generate XML reports
+      - name: Run JUnit Tests
+        run: |
+          java -jar junit-console.jar \
+            --class-path "build:lib/*" \
+            --scan-class-path \
+            --reports-dir reports/junit
+
+
+      # PMD setup
+      - name: Download PMD
+        run: |
+          wget https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-dist-7.0.0-bin.zip
+          unzip pmd-dist-7.0.0-bin.zip
+          mv pmd-bin-7.0.0 pmd
+
+
+      - name: Run PMD
+        run: |
+          mkdir -p reports
+          ./pmd/bin/pmd check \
+            -d upload_here \
+            -R category/java/bestpractices.xml \
+            -f xml \
+            -r reports/pmd.xml || true
+
+
+      # Checkstyle setup
+      - name: Download Checkstyle
+        run: |
+          wget https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.12.4/checkstyle-10.12.4-all.jar
+          mv checkstyle-10.12.4-all.jar checkstyle.jar
+
+
+      - name: Run Checkstyle
+        run: |
+          java -jar checkstyle.jar \
+            -c /google_checks.xml \
+            -f xml \
+            -o reports/checkstyle.xml \
+            upload_here || true
+
+
+      # Python setup
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+
+      # Run grading script
+      - name: Run grading script
+        run: python grade.py
+
+
+      # Upload reports
+      - name: Upload grading feedback
+        uses: actions/upload-artifact@v4
+        with:
+          name: grading-feedback
+          path: reports/
+
+
+      # Email feedback
+      - name: Send Feedback Email
+        if: always()
+        env:
+          GMAIL_USER: alarusie@gmail.com
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: |
+          python <<'EOF'
+          import os
+          import re
+          import smtplib
+          from email.message import EmailMessage
+          from pathlib import Path
+
+          gmail_user = os.environ['GMAIL_USER']
+          gmail_pass = os.environ['GMAIL_APP_PASSWORD']
+
+          java_files = Path('upload_here').glob('*.java')
+          student_email = None
+
+          for java_file in java_files:
+              with open(java_file, 'r') as f:
+                  content = f.read()
+
+              match = re.search(r'@author\s+([^\s]+)', content)
+
+              if match:
+                  username = match.group(1)
+                  student_email = f"{username}@enmu.edu"
+                  break
+
+          if not student_email:
+              student_email = "essa.imhmed@enmu.edu"
+
+          msg = EmailMessage()
+          msg['Subject'] = 'Automated Grading Feedback'
+          msg['From'] = gmail_user
+          msg['To'] = student_email
+
+          msg.set_content(
+              "Hello,\n\nYour automated grading feedback is attached.\n\nRegards,\nDr. Imhmed"
+          )
+
+          feedback = Path("reports/feedback.md")
+
+          if feedback.exists():
+              with open(feedback,'rb') as f:
+                  msg.add_attachment(
+                      f.read(),
+                      maintype='text',
+                      subtype='plain',
+                      filename='feedback.md'
+                  )
+
+          with smtplib.SMTP('smtp.gmail.com',587) as server:
+              server.starttls()
+              server.login(gmail_user,gmail_pass)
+              server.send_message(msg)
+
+          print("Email sent.")
+          EOF
