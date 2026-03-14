@@ -4,7 +4,7 @@ name: Java AutoGrader CI
 on:
   push:
     paths:
-      - 'upload_here/**'
+      - 'Upload_here/**'
   workflow_dispatch:
 
 jobs:
