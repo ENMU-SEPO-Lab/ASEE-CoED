@@ -1,9 +1,11 @@
 name: Java AutoGrader CI
 
-# Trigger on pull requests or manual runs
+# Trigger on pushes to upload_here or manual runs
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'upload_here/**'
   workflow_dispatch:
 
 jobs:
@@ -35,10 +37,7 @@ jobs:
       # Prepare folders
       - name: Prepare folders
         run: |
-          mkdir -p lib
-          mkdir -p build
-          mkdir -p reports/junit
-          mkdir -p pmd
+          mkdir -p lib build reports/junit pmd
 
       # Cache JUnit & Hamcrest
       - name: Cache JUnit & Hamcrest
