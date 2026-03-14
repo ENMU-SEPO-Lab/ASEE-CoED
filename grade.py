@@ -24,39 +24,28 @@ def count_junit_failures():
         return 0, 0
     for file in os.listdir(JUNIT_DIR):
         if file.endswith(".xml"):
-            try:
-                tree = ET.parse(os.path.join(JUNIT_DIR, file))
-                root = tree.getroot()
-                tests += int(root.attrib.get("tests", 0))
-                failures += int(root.attrib.get("failures", 0))
-                failures += int(root.attrib.get("errors", 0))
-            except ET.ParseError:
-                print(f"Warning: Could not parse {file}. Skipping.")
+            tree = ET.parse(os.path.join(JUNIT_DIR, file))
+            root = tree.getroot()
+            tests += int(root.attrib.get("tests", 0))
+            failures += int(root.attrib.get("failures", 0))
+            failures += int(root.attrib.get("errors", 0))
     return tests, failures
 
 
 def count_pmd_violations():
     if not os.path.exists(PMD_FILE):
         return 0
-    try:
-        tree = ET.parse(PMD_FILE)
-        root = tree.getroot()
-        return len(root.findall(".//violation"))
-    except ET.ParseError:
-        print("Warning: Could not parse PMD file.")
-        return 0
+    tree = ET.parse(PMD_FILE)
+    root = tree.getroot()
+    return len(root.findall(".//violation"))
 
 
 def count_checkstyle_violations():
     if not os.path.exists(CHECKSTYLE_FILE):
         return 0
-    try:
-        tree = ET.parse(CHECKSTYLE_FILE)
-        root = tree.getroot()
-        return len(root.findall(".//file//error"))
-    except ET.ParseError:
-        print("Warning: Could not parse Checkstyle file.")
-        return 0
+    tree = ET.parse(CHECKSTYLE_FILE)
+    root = tree.getroot()
+    return len(root.findall(".//file//error"))
 
 
 def main():
@@ -66,9 +55,7 @@ def main():
 
     if tests == 0:
         print("No tests found. Setting test score to 0.")
-        test_score = 0
-    else:
-        test_score = ((tests - failures) / tests) * TEST_WEIGHT
+    test_score = ((tests - failures) / tests) * TEST_WEIGHT if tests else 0
 
     pmd_penalty = pmd_violations * PMD_DEDUCTION_PER_VIOLATION
     pmd_score = max(PMD_WEIGHT - pmd_penalty, 0)
@@ -85,10 +72,9 @@ def main():
     print(f"Final Score: {final_score:.2f} / {MAX_SCORE}")
     print("Result: PASS" if final_score >= PASS_THRESHOLD else "Result: FAIL")
 
-    # Write feedback.md
+    # Optionally write feedback.md
     os.makedirs("reports", exist_ok=True)
-    feedback_path = os.path.join("reports", "feedback.md")
-    with open(feedback_path, "w") as f:
+    with open("reports/feedback.md", "w") as f:
         f.write("# Grading Feedback\n\n")
         f.write(f"- Tests run: {tests}\n")
         f.write(f"- Failures: {failures}\n")
@@ -97,7 +83,10 @@ def main():
         f.write(f"- Final Score: {final_score:.2f} / {MAX_SCORE}\n")
         f.write(f"- Result: {'PASS' if final_score >= PASS_THRESHOLD else 'FAIL'}\n")
 
-    sys.exit(0 if final_score >= PASS_THRESHOLD else 1)
+    if final_score < PASS_THRESHOLD:
+        sys.exit(1)
+    else:
+        sys.exit(0)
 
 
 if __name__ == "__main__":
