@@ -64,7 +64,7 @@ def run_pipeline(
         if student_records:
             num_submissions_made = len(records.get(upload_dir.name).get(student_email))
             if num_submissions_made > max_submission_num:
-                print(f"Student reached the maximum number of submissions ({max_submission_num}) for this assignment")
+                print(f"Student reached the maximum number of submissions ({max_submission_num}) for this assignment", file=sys.stderr) # stderr because stdout is reserved for the report_file_path printing
                 # abort pipeline
                 sys.exit()
         
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     with open(GRADING_CONFIG_FILE, "r") as file:
         grading_config = json.load(file)
                 
-    print("Test files read successfully")
+    print("Test files read successfully", file=sys.stderr) # stderr because stdout is reserved for the report_file_path printing
     
     # run the pipeline
     submission_data, processed_submission = run_pipeline(
@@ -171,4 +171,7 @@ if __name__ == "__main__":
         PMD_ERROR_DATA_CSV,
         submission_data.email)
     
-    # print(submission_data) # debugging
+    # print report file path to stdout for use in the github actions workflow
+    print(submission_data.report_file_path)
+    
+    # print(submission_data, file=sys.stderr) # debugging
