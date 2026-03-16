@@ -68,8 +68,9 @@ jobs:
             wget https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-dist-7.0.0-bin.zip && \
             unzip pmd-dist-7.0.0-bin.zip && \
             ls -l && \
-            mv pmd-dist-7.0.0-bin pmd && \
+            mv pmd-bin-7.0.0 pmd && \
             echo "Check if the pmd dir is created" && \
+            ls -l pmd && \
             ls -l pmd/bin || echo "pmd/bin directory not found"
           )
 
