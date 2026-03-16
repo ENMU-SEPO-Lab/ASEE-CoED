@@ -100,10 +100,10 @@ jobs:
           java -jar junit-console.jar \
             --class-path "build:lib/*" \
             --scan-class-path \
-            --reports-dir reports/junit \
+            --reports-dir reports \
             --include-classname .*Test \
             --details tree \
-            | tee reports/junit/junit-report.txt
+            | tee reports/junit-report.txt
 
       # - name: Debug directory structure
       #   run: find pmd -maxdepth 5
