@@ -59,11 +59,13 @@ jobs:
             pmd
             checkstyle.jar
             build
-          key: ${{ runner.os }}-grading-tools-v5
+          key: ${{ runner.os }}-grading-tools-v6
       
           # Download PMD if missing
       - name: Download PMD
         run: |
+          echo "list root contents"
+          ls -l
           find pmd -maxdepth 5
           [ -f pmd/bin/pmd ] || ( \
             wget https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-dist-7.0.0-bin.zip && \
