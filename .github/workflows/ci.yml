@@ -64,11 +64,11 @@ jobs:
       # Download PMD if missing
       - name: Download PMD
         run: |
-          [ -f pmd/bin/run.sh ] || ( \
+          [ -f pmd/bin/pmd ] || ( \
             wget https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-dist-7.0.0-bin.zip && \
             unzip pmd-dist-7.0.0-bin.zip && \ 
-            mv pmd-bin-7.0.0 pmd \
-            echo "Check if the pmd dir is created" \
+            mv pmd-bin-7.0.0 pmd && \
+            echo "Check if the pmd dir is created" && \
             ls -l pmd/bin || echo "pmd/bin directory not found"
           )
 
@@ -107,8 +107,8 @@ jobs:
             --details tree \
             | tee reports/junit/junit-report.txt
 
-      - name: Debug directory structure
-        run: find pmd -maxdepth 5
+      # - name: Debug directory structure
+      #   run: find pmd -maxdepth 5
 
       # Run PMD
       - name: Run PMD
