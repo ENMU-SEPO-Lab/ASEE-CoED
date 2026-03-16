@@ -67,12 +67,15 @@ jobs:
           [ -f pmd/bin/pmd ] || ( \
             wget https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-dist-7.0.0-bin.zip && \
             unzip pmd-dist-7.0.0-bin.zip && \
+            echo "list root contents" && \
             ls -l && \
+            echo "rename unzipped folder to pmd" && \
             mv pmd-bin-7.0.0 pmd && \
-            echo "Check if the pmd dir is created" && \
-            ls -l pmd && \
+            echo "check pmd dir for contents max_depth 5" && \
+            find pmd -maxdepth 5 && \
+            echo "Check if the pmd/bin dir is created" && \
             ls -l pmd/bin || echo "pmd/bin directory not found"
-          )
+            )
 
       # Download Checkstyle if missing
       - name: Download Checkstyle
