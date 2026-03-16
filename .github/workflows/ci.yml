@@ -153,10 +153,22 @@ jobs:
         run: |
           python -m venv .venv
 
+      - name: Check if venv is executable
+        run: |    
+          if [ ! -x ".venv/bin/python" ]; then
+            echo "Virtual environment is missing or broken. Recreating..."
+            rm -rf .venv
+            python -m venv .venv
+            .venv/bin/pip install --upgrade pip
+            .venv/bin/pip install -r requirements.txt
+          else
+            echo "Virtual environment is executable."
+          fi
+
       - name: Ensure venv packages
         run: |
           find .venv -maxdepth 5
-          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
 
       # Run grading script
