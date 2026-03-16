@@ -48,8 +48,20 @@ jobs:
       - name: Download JUnit Console
         run: |
           [ -f junit-console.jar ] || wget -O junit-console.jar https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.2/junit-platform-console-standalone-1.10.2.jar
-
-      # Download PMD if missing
+      
+          # Cache all grading tools and compiled classes
+      - name: Cache grading tools and compiled classes
+        uses: actions/cache@v3
+        with:
+          path: |
+            lib
+            junit-console.jar
+            pmd
+            checkstyle.jar
+            build
+          key: ${{ runner.os }}-grading-tools-v5
+      
+          # Download PMD if missing
       - name: Download PMD
         run: |
           find pmd -maxdepth 5
@@ -70,18 +82,6 @@ jobs:
       - name: Download Checkstyle
         run: |
           [ -f checkstyle.jar ] || wget -O checkstyle.jar https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.12.4/checkstyle-10.12.4-all.jar
-
-      # Cache all grading tools and compiled classes
-      - name: Cache grading tools and compiled classes
-        uses: actions/cache@v3
-        with:
-          path: |
-            lib
-            junit-console.jar
-            pmd
-            checkstyle.jar
-            build
-          key: ${{ runner.os }}-grading-tools-v4
 
       # Compile student code (cached build will skip unchanged)
       - name: Compile Student Code
