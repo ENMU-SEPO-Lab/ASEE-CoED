@@ -64,6 +64,7 @@ jobs:
       # Download PMD if missing
       - name: Download PMD
         run: |
+          find pmd -maxdepth 5
           [ -f pmd/bin/pmd ] || ( \
             wget https://github.com/pmd/pmd/releases/download/pmd_releases/7.0.0/pmd-dist-7.0.0-bin.zip && \
             unzip pmd-dist-7.0.0-bin.zip && \
@@ -119,7 +120,11 @@ jobs:
       - name: Run PMD
         run: |
           mkdir -p reports
-          ./pmd/bin/pmd check -d upload_here -R category/java/bestpractices.xml -f xml -r reports/pmd.xml
+          ./pmd/bin/pmd check \
+            -d upload_here \
+            -R category/java/bestpractices.xml \
+            -f xml \
+            -r reports/pmd.xml
 
       # Run Checkstyle
       - name: Run Checkstyle
