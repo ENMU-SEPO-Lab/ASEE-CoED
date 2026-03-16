@@ -114,11 +114,7 @@ jobs:
       - name: Run PMD
         run: |
           mkdir -p reports
-          ./pmd/bin/pmd check \
-            -d upload_here \
-            -R category/java/bestpractices.xml \
-            -f xml \
-            -r reports/pmd.xml
+          ./pmd/bin/pmd check -d upload_here -R category/java/bestpractices.xml -f xml -r reports/pmd.xml
 
       # Run Checkstyle
       - name: Run Checkstyle
