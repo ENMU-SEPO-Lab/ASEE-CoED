@@ -152,6 +152,10 @@ jobs:
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv .venv
+
+      - name: Ensure venv packages
+        run: |
+          .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
 
       # Run grading script
