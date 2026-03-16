@@ -36,7 +36,19 @@ jobs:
       # Prepare folders
       - name: Prepare folders
         run: |
-          mkdir -p lib build reports/junit pmd      
+          mkdir -p lib build reports/junit
+          
+      # Cache all grading tools and compiled classes
+      - name: Cache grading tools and compiled classes
+        uses: actions/cache@v3
+        with:
+          path: |
+            lib
+            junit-console.jar
+            pmd
+            checkstyle.jar
+            build
+          key: ${{ runner.os }}-grading-tools-v7
 
       # Download JUnit & Hamcrest if missing
       - name: Download JUnit & Hamcrest
@@ -49,19 +61,7 @@ jobs:
         run: |
           [ -f junit-console.jar ] || wget -O junit-console.jar https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.2/junit-platform-console-standalone-1.10.2.jar
       
-          # Cache all grading tools and compiled classes
-      - name: Cache grading tools and compiled classes
-        uses: actions/cache@v3
-        with:
-          path: |
-            lib
-            junit-console.jar
-            pmd
-            checkstyle.jar
-            build
-          key: ${{ runner.os }}-grading-tools-v6
-      
-          # Download PMD if missing
+      # Download PMD if missing
       - name: Download PMD
         run: |
           echo "list root contents"
