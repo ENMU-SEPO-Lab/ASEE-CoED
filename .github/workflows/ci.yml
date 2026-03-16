@@ -36,19 +36,7 @@ jobs:
       # Prepare folders
       - name: Prepare folders
         run: |
-          mkdir -p lib build reports/junit pmd
-
-      # Cache all grading tools and compiled classes
-      - name: Cache grading tools and compiled classes
-        uses: actions/cache@v3
-        with:
-          path: |
-            lib
-            junit-console.jar
-            pmd
-            checkstyle.jar
-            build
-          key: ${{ runner.os }}-grading-tools-v2
+          mkdir -p lib build reports/junit pmd      
 
       # Download JUnit & Hamcrest if missing
       - name: Download JUnit & Hamcrest
@@ -82,6 +70,18 @@ jobs:
       - name: Download Checkstyle
         run: |
           [ -f checkstyle.jar ] || wget -O checkstyle.jar https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.12.4/checkstyle-10.12.4-all.jar
+
+      # Cache all grading tools and compiled classes
+      - name: Cache grading tools and compiled classes
+        uses: actions/cache@v3
+        with:
+          path: |
+            lib
+            junit-console.jar
+            pmd
+            checkstyle.jar
+            build
+          key: ${{ runner.os }}-grading-tools-v4
 
       # Compile student code (cached build will skip unchanged)
       - name: Compile Student Code
