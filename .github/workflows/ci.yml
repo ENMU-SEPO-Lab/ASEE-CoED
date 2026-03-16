@@ -158,12 +158,12 @@ jobs:
       - name: Run grading script
         id: grader
         run: |
-          if [ -f CodeInspector/main.py ]; then
+          if [ -f CodeInspector/main.py ] && [ -f .venv/bin/activate ]; then
             source .venv/bin/activate
             FEEDBACK_PATH=$(python CodeInspector/main.py)
             echo "feedback_path=$FEEDBACK_PATH" >> $GITHUB_OUTPUT
           else
-            echo "CodeInspector/main.py not found, skipping grading"
+            echo "CodeInspector/main.py or venv not found, skipping grading"
           fi
 
       # Upload reports
