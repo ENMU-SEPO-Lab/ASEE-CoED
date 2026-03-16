@@ -107,8 +107,8 @@ jobs:
             --details tree \
             | tee reports/junit/junit-report.txt
 
-      # - name: Debug directory structure
-      #   run: find pmd -maxdepth 5
+      - name: Debug directory structure
+        run: find pmd -maxdepth 5
 
       # Run PMD
       - name: Run PMD
