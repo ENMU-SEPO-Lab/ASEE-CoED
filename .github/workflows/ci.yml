@@ -155,6 +155,7 @@ jobs:
 
       - name: Ensure venv packages
         run: |
+          find .venv -maxdepth 5
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install -r requirements.txt
 
