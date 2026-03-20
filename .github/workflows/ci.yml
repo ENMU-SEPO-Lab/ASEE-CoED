@@ -16,6 +16,7 @@ jobs:
       VENV_PATH: .venv
       BUILD_DIR: CodeInspector/build
       TEST_REPORT_DIR: CodeInspector/build/test_reports
+      GRADE_REPORT_DIR: CodeInspector/build/grade_reports
       ASSIGNMENT_DIR: 'upload_here'
 
     steps:
@@ -197,7 +198,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: grading-feedback
-          path: reports/
+          path: ${{ env.GRADE_REPORT_DIR }}
 
       # Send feedback email
       - name: Send Feedback Email
