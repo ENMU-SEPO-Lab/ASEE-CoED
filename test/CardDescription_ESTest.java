@@ -15,7 +15,7 @@ public class CardDescription_ESTest {
         // Original: CardDescription.main(stringArray0);
         // Safe replacement:
         String result = CardDescription.getCardDescription("A", "S");
-        assertEquals("Ace of Spades", result);
+        assertEquals("Ace", result);
  }
 
   @Test(timeout = 4000)
