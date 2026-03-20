@@ -1,6 +1,7 @@
 from app.infrastructure.models import SubmissionData
 from pathlib import Path
 import json
+import sys
 
 def update_json (
     submission_data: SubmissionData,
@@ -31,7 +32,7 @@ def update_json (
                 data = {}
                             
             if not upload_dir_name:
-                print("No upload directory name.")
+                print("No upload directory name.", file=sys.stderr)
                 return
             
             if upload_dir_name not in data:
@@ -57,8 +58,8 @@ def update_json (
             file.seek(0)
             json.dump(data, file, indent=4)
             file.truncate()
-            print("JSON records updated successfully.")
+            print("JSON records updated successfully.", file=sys.stderr)
      
     except Exception as e:
-        print(e)
-        print("Failed to update json")
+        print(e, file=sys.stderr)
+        print("Failed to update json", file=sys.stderr)

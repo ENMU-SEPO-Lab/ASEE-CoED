@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 
 def count_lines_in_dir(source_dir: Path) -> int:
     """this function counts the lines of code of all java files found in the given directory
@@ -18,7 +19,7 @@ def count_lines_in_dir(source_dir: Path) -> int:
                 if line.strip():
                     subtotal += 1
             total += subtotal
-    print(f"total lines in directory: {total}")
+    print(f"total lines in directory: {total}", file=sys.stderr)
     return total
 
 def count_loc_in_dir(source_dir: Path | str) -> int:

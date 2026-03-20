@@ -4,6 +4,7 @@ from app.infrastructure.models import (
     UnitTestingSummary, 
     TestFailureDetails
 )
+import sys
 
 def parse_test_results(junit_txt: str) -> UnitTestingResults:
     """parses the junit test result txt file
@@ -74,5 +75,5 @@ def parse_test_results(junit_txt: str) -> UnitTestingResults:
         return result
  
     except Exception as e:
-        print(f"Failed to parse test results: {e}")
-        raise ValueError("Invalid JUnit test output") from e
+        print(f"Failed to parse test results: {e}", file=sys.stderr)
+        raise ValueError("Invalid JUnit test output", file=sys.stderr) from e

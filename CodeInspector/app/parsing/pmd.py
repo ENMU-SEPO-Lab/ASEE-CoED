@@ -1,5 +1,6 @@
 from app.infrastructure.models import PmdViolation
 import xml.etree.ElementTree as ET
+import sys
 
 def _to_int(value_to_convert: str | None) -> int | None:
     return int(value_to_convert) if value_to_convert is not None and value_to_convert != "" else None
@@ -41,6 +42,6 @@ def parse_pmd(xml_text: str) -> list[PmdViolation]:
                 )
         return violations
     except ET.ParseError as e:
-        print(f"Failed to parse PMD XML: {e}")
+        print(f"Failed to parse PMD XML: {e}", file=sys.stderr)
         return []
     

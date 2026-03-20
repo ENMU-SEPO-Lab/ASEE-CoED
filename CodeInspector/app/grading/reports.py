@@ -5,6 +5,7 @@ from app.infrastructure.models import (
     ProcessedJunitTests,
     # UnitTestCase
 )
+import sys
 
 # generate grade report using the previously constructed JSON file
 def create_grade_report(
@@ -113,7 +114,6 @@ def create_grade_report(
         
         average_assignment_error_class, relative_change_to_class, comparator_string = percentiles_class
             
-        print 
         # add overall stats to coding style summary lines
         coding_style_summary_lines = [
             f"\n\nSUMMARY  {'-' * 40}\n",
@@ -174,7 +174,7 @@ def create_grade_report(
         file.writelines(unit_testing_lines)
         file.writelines(score_lines)
     
-    print(f"Grade report created and saved to: {grade_report_file_path}")
+    print(f"Grade report created and saved to: {grade_report_file_path}", file=sys.stderr)
         
     # except Exception as e:
     #     print(f"Failed to generate report: {e}")
