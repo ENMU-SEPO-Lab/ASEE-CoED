@@ -34,7 +34,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: $PYTHON_V
+          python-version: ${{ env.PYTHON_V }}
 
       # Install minimal utilities
       - name: Install wget & unzip
@@ -54,7 +54,7 @@ jobs:
             junit-console.jar
             pmd
             checkstyle.jar
-            $BUILD_DIR
+            ${{ env.BUILD_DIR }}
           key: ${{ runner.os }}-grading-tools-v7
 
       # Download JUnit & Hamcrest if missing
@@ -151,7 +151,7 @@ jobs:
         uses: actions/cache@v3
         id: cache-venv
         with:
-          path: $VENV_PATH
+          path: ${{ env.VENV_PATH }}
           key:  ${{ runner.os }}-venv-${{ hashFiles('requirements.txt') }}
 
       # Install venv if not cached
