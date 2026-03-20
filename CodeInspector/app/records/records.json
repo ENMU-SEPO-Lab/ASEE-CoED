@@ -286,6 +286,26 @@
                     ]
                 ],
                 "top_pmd_errors": []
+            },
+            {
+                "counter": 8,
+                "loc": 50,
+                "error density": 0.005,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": []
             }
         ],
         "essa.imhmed@enmu.edu": [

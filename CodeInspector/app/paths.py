@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[2] # .../ASEE-COED/
 
 BUILD_XML_PATH = CODE_INSPECTOR / "build.xml"
 CONFIG_DIR = CODE_INSPECTOR / "app/app_config"
-XML_REPORT_DIR = ROOT / "reports"
+XML_REPORT_DIR = CODE_INSPECTOR / "build/test_reports"
 GRADE_REPORTS_DIR = CODE_INSPECTOR / "build/grade_reports"
 RECORDS_DIR = CODE_INSPECTOR / "app/records"
 

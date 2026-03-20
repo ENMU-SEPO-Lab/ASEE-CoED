@@ -11,6 +11,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      PYTHON_V: '3.11'
+      VENV_PATH: .venv
+      BUILD_DIR: CodeInspector/build
+      TEST_REPORT_DIR: CodeInspector/build/test_reports
+      ASSIGNMENT_DIR: 'upload_here'
+
     steps:
       # Checkout repository
       - name: Checkout repository
@@ -27,7 +34,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: $PYTHON_V
 
       # Install minimal utilities
       - name: Install wget & unzip
@@ -36,7 +43,7 @@ jobs:
       # Prepare folders
       - name: Prepare folders
         run: |
-          mkdir -p lib build reports/junit
+          mkdir -p lib $BUILD_DIR $TEST_REPORT_DIR
           
       # Cache all grading tools and compiled classes
       - name: Cache grading tools and compiled classes
@@ -47,7 +54,7 @@ jobs:
             junit-console.jar
             pmd
             checkstyle.jar
-            build
+            $BUILD_DIR
           key: ${{ runner.os }}-grading-tools-v7
 
       # Download JUnit & Hamcrest if missing
@@ -78,7 +85,7 @@ jobs:
       # Compile student code (cached build will skip unchanged)
       - name: Compile Student Code
         run: |
-          find upload_here -name "*.java" | xargs javac -d build
+          find $ASSIGNMENT_DIR -name "*.java" | xargs javac -d build
 
       # Compile tests
       - name: Compile Tests
@@ -100,10 +107,10 @@ jobs:
           java -jar junit-console.jar \
             --class-path "build:lib/*" \
             --scan-class-path \
-            --reports-dir reports \
+            --reports-dir $TEST_REPORT_DIR \
             --include-classname .*Test \
             --details tree \
-            | tee reports/junit-report.txt
+            | tee $TEST_REPORT_DIR/junit-report.txt
 
       # - name: Debug directory structure
       #   run: find pmd -maxdepth 5
@@ -113,10 +120,10 @@ jobs:
         run: |
           mkdir -p reports
           ./pmd/bin/pmd check \
-            -d upload_here \
+            -d $ASSIGNMENT_DIR \
             -R category/java/bestpractices.xml \
             -f xml \
-            -r reports/pmd.xml || true
+            -r $TEST_REPORT_DIR/pmd.xml || true
 
       # Run Checkstyle
       - name: Run Checkstyle
@@ -124,8 +131,8 @@ jobs:
           java -jar checkstyle.jar \
             -c /google_checks.xml \
             -f xml \
-            -o reports/checkstyle.xml \
-            upload_here || true
+            -o $TEST_REPORT_DIR/checkstyle.xml \
+            $ASSIGNMENT_DIR || true
 
       # # Run grading script
       # - name: Run grading script
@@ -137,46 +144,45 @@ jobs:
       #     fi
 
       - name: Debug directory structure
-        run: find reports -maxdepth 3
+        run: find $TEST_REPORT_DIR -maxdepth 3
       
       # Cache the venv
       - name: Cache venv
         uses: actions/cache@v3
         id: cache-venv
         with:
-          path: .venv
+          path: $VENV_PATH
           key:  ${{ runner.os }}-venv-${{ hashFiles('requirements.txt') }}
 
       # Install venv if not cached
       - name: Create and install venv
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
-          python -m venv .venv
+          python -m venv $VENV_PATH
 
       - name: Check if venv is executable
         run: |    
-          if [ ! -x ".venv/bin/python" ]; then
+          if [ ! -x "$VENV_PATH/bin/python" ]; then
             echo "Virtual environment is missing or broken. Recreating..."
-            rm -rf .venv
-            python -m venv .venv
-            .venv/bin/pip install --upgrade pip
-            .venv/bin/pip install -r requirements.txt
+            rm -rf $VENV_PATH
+            python -m venv $VENV_PATH
+            $VENV_PATH/bin/pip install --upgrade pip
+            $VENV_PATH/bin/pip install -r requirements.txt
           else
             echo "Virtual environment is executable."
           fi
 
       - name: Ensure venv packages
         run: |
-          find .venv -maxdepth 5
-          .venv/bin/pip install --upgrade pip
-          .venv/bin/pip install -r requirements.txt
+          $VENV_PATH/bin/pip install --upgrade pip
+          $VENV_PATH/bin/pip install -r requirements.txt
 
       # Run grading script
       - name: Run grading script
         id: grader
         run: |
-          if [ -f CodeInspector/main.py ] && [ -f .venv/bin/activate ]; then
-            source .venv/bin/activate
+          if [ -f CodeInspector/main.py ] && [ -f $VENV_PATH/bin/activate ]; then
+            source $VENV_PATH/bin/activate
             FEEDBACK_PATH=$(python CodeInspector/main.py)
             echo "feedback_path=$FEEDBACK_PATH" >> $GITHUB_OUTPUT
           else
@@ -209,7 +215,7 @@ jobs:
           gmail_pass = os.environ['GMAIL_APP_PASSWORD']
           feedback_path = Path(os.environ['FEEDBACK_FILE_PATH'])
 
-          java_files = Path('upload_here').glob('*.java')
+          java_files = Path('$ASSIGNMENT_DIR').glob('*.java')
           student_email = None
 
           for java_file in java_files:

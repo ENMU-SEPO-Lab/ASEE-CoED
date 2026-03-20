@@ -48,6 +48,8 @@ def compare_score_with_self_global(
         print("No records for assignments available")
         return
     
+    print(error_density)
+    
     error_density_list = []
     
     for assignment, assignment_data in records.items():
@@ -65,7 +67,8 @@ def compare_score_with_self_global(
         
         else :
             final_submission = student_data[len(student_data) - 1] # get the last submission of the student
-            submission_error_density = final_submission.get("error density", submission_error_density)
+            print(final_submission.get("error density"))
+            submission_error_density = final_submission.get("error density")
             
         error_density_list.append(submission_error_density)        
                 
