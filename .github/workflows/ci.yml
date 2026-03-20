@@ -111,7 +111,9 @@ jobs:
             --include-classname .*Test \
             --details tree \
             | tee $TEST_REPORT_DIR/junit-report.txt
-          cat $TEST_REPORT_DIR/junit-report.txt
+          
+      - name: Print junit.txt file
+        run: cat $TEST_REPORT_DIR/junit-report.txt
 
       # - name: Debug directory structure
       #   run: find pmd -maxdepth 5
