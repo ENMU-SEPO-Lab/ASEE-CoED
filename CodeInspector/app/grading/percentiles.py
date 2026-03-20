@@ -1,6 +1,7 @@
 from scipy.stats import percentileofscore
 from pathlib import Path
 import pandas as pd
+import sys
 
 def get_global_percentile_score(
     cs_error_density: float ,
@@ -45,10 +46,10 @@ def compare_score_with_self_global(
     precision_ed = grading_config.get("system_decimal_precision", {}).get("error_density", 4)
     
     if records is None:
-        print("No records for assignments available")
+        print("No records for assignments available", file=sys.stderr)
         return
     
-    print(error_density)
+    print(error_density, file=sys.stderr)
     
     error_density_list = []
     
@@ -61,13 +62,12 @@ def compare_score_with_self_global(
         student_data = assignment_data.get(student_email, {})    
         
         if not student_data:
-            print(
-                f"No data for {student_email} under assignment {assignment}. The error density of the final submission for this assignment is defaulted to the one of the current submission")
+            print(f"No data for {student_email} under assignment {assignment}. The error density of the final submission for this assignment is defaulted to the one of the current submission", file=sys.stderr)
             submission_error_density = error_density # default the error density score to the one of the current submission
         
         else :
             final_submission = student_data[len(student_data) - 1] # get the last submission of the student
-            print(final_submission.get("error density"))
+            print(final_submission.get("error density"), file=sys.stderr)
             submission_error_density = final_submission.get("error density")
             
         error_density_list.append(submission_error_density)        
@@ -120,13 +120,13 @@ def compare_score_with_self(
     precision_ed = grading_config.get("system_decimal_precision", {}).get("error_density", 4)
 
     if not assignment_data:
-        print(f"There are no records for {assignment_dir}")
+        print(f"There are no records for {assignment_dir}", file=sys.stderr)
         return
     
     student_data = assignment_data.get(student_email, [])
     
     if not student_data:
-        print(f"There are no records for {student_email} under {assignment_dir}")
+        print(f"There are no records for {student_email} under {assignment_dir}", file=sys.stderr)
         return
     
     error_density_list = []
@@ -142,7 +142,7 @@ def compare_score_with_self(
     density_of_last_submission = round(error_density_list[(len(error_density_list) - 1)], precision_ed)
     relative_change_to_last = abs((1 - round(error_density / density_of_last_submission, precision_ed)) * 100)
     submission_number = student_data[len(student_data) - 1].get("counter") + 1 # get the number of the last submission and increment it
-    print(f"Submission number: {submission_number}")
+    print(f"Submission number: {submission_number}", file=sys.stderr)
     return  (
                 average_error_density, density_of_last_submission, 
                 density_of_first_submission, relative_change_to_last,  
@@ -172,7 +172,7 @@ def compare_score_with_class(
     precision_ed = grading_config.get("system_decimal_precision", {}).get("error_density", 4)
     
     if not assignment_data: # if no records under this directory name
-        print(f"There are no records for {assignment_dir}")
+        print(f"There are no records for {assignment_dir}", file=sys.stderr)
         return
     
     error_density_list = [] # initialize list to store the error_density values
@@ -191,7 +191,7 @@ def compare_score_with_class(
             error_density_list.append(submission_error_density)
             
     if not error_density_list:
-        print(f"No error density records found for {assignment_dir}")
+        print(f"No error density records found for {assignment_dir}", file=sys.stderr)
         return
 
     # calculate average error of all final submissions by students for this assignment
