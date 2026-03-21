@@ -44,6 +44,6 @@
         "percentile_score": 2,
         "percent_value": 2
     },
-    "max_submissions_per_assignment": 10,
+    "max_submissions_per_assignment": 15,
     "top_n_errors": 3
 }

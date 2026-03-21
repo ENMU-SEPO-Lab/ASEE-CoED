@@ -1,10 +1,9 @@
 TODO:
 
-- Abort pipeline if criteria not met (e.g. no author, no upload dir)
-- Runtime score metrics and calculation
-- round up weighted error density for all
-- create a method that compares student performance to all final weighted error density of different submissions for the same student
-- update the method that compare students current submission to class wide submission of different assignments, but consider only the final submissions
+- dynamic runtime and efficiency scores -> GenAI
+- add grade_report.txt path to records.json file for reference inside CI pipeline
+- adapt junit parsing logic to consume new .xml format
+- fetch recipient address for feedback email from records.json or script logic output file?
 
 
 Future objectives:

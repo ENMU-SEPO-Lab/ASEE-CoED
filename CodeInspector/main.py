@@ -32,7 +32,7 @@ from app.infrastructure.models import SubmissionData, ProcessedSubmission
 def run_pipeline(
     checkstyle_xml: str, 
     pmd_xml: str, 
-    junit_txt: str, 
+    junit_xml: str, 
     grading_config: dict
 ) -> tuple[SubmissionData, ProcessedSubmission]:
     """The pipeline
@@ -63,13 +63,13 @@ def run_pipeline(
         student_records = records.get(upload_dir.name).get(student_email)
         if student_records:
             num_submissions_made = len(records.get(upload_dir.name).get(student_email))
-            if num_submissions_made > max_submission_num:
+            if num_submissions_made >= max_submission_num:
                 print(f"Student reached the maximum number of submissions ({max_submission_num}) for this assignment", file=sys.stderr) # stderr because stdout is reserved for the report_file_path printing
                 # abort pipeline
                 sys.exit()
         
     # send xml files to parser logic and receive CombinedParsedViolations object
-    parsed = parser.parse_and_combine_test_files(checkstyle_xml, pmd_xml, junit_txt)
+    parsed = parser.parse_and_combine_test_files(checkstyle_xml, pmd_xml, junit_xml)
             
     check_date = transf_helper.check_date() # get current date and format it    
     # loc = line_counter.count_loc_in_dir(upload_dir) # count the lines of code detected in the submission dir (ignores blank lines and comments)
@@ -148,7 +148,7 @@ if __name__ == "__main__":
         pmd_xml = file.read()
 
     with open(JUNIT_RESULT_FILE, "r") as file:
-        junit_txt = file.read()
+        junit_xml = file.read()
 
     with open(GRADING_CONFIG_FILE, "r") as file:
         grading_config = json.load(file)
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     submission_data, processed_submission = run_pipeline(
         checkstyle_xml, 
         pmd_xml, 
-        junit_txt, 
+        junit_xml, 
         grading_config
     )
     

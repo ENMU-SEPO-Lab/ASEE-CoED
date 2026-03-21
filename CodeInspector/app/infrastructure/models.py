@@ -32,7 +32,7 @@ class PmdViolation:
 @dataclass
 class TestFailureDetails:
     message: str = ""
-    stack_trace: list[str] = field(default_factory=list)
+    stack_trace: str = ""
     
 @dataclass
 class UnitTestingSummary:

@@ -12,7 +12,7 @@ RECORDS_DIR = CODE_INSPECTOR / "app/records"
 
 CS_XML_FILE = XML_REPORT_DIR / "checkstyle.xml"
 PMD_XML_FILE = XML_REPORT_DIR / "pmd.xml"
-JUNIT_RESULT_FILE = XML_REPORT_DIR / "junit-report.txt"
+JUNIT_RESULT_FILE = XML_REPORT_DIR / "TEST-junit-vintage.xml"
 GRADING_CONFIG_FILE = CONFIG_DIR / "grading_config.json"
 RECORDS_JSON_FILE = RECORDS_DIR / "records.json"
 WEIGHTED_DATA_CSV = RECORDS_DIR / "historical/weighted_data.csv"
