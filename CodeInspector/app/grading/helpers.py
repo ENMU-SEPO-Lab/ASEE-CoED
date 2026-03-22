@@ -1,6 +1,7 @@
 from pathlib import Path
 from pandas import DataFrame, read_csv
 import json
+import sys
 
 def ensure_json_file(file_path: Path | str) -> None:
     """Creates a JSON file at the specified path whose root is an empty object if the file does 
@@ -32,7 +33,7 @@ def load_json(file_path: Path | str) -> dict:
         data = json.load(file)
         
     if not isinstance(data, dict):
-        raise ValueError("records file must contain an object at top level")
+        raise ValueError("records file must contain an object at top level", file=sys.stderr)
     return data
 
 def check_for_weighted_data_csv(csv_path: Path | str) -> bool:

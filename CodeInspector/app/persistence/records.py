@@ -21,6 +21,7 @@ def update_json (
     weighted_error_density = submission_data.overall_weighted_error
     top_cs_errors = submission_data.top_cs_error_types
     top_pmd_errors = submission_data.top_pmd_error_types
+    report_file_path = str(submission_data.report_file_path)
     
     try:
         with open(file_path, 'r+') as file:
@@ -50,7 +51,8 @@ def update_json (
                 "loc": loc,
                 "error density": weighted_error_density,
                 "top_cs_errors": top_cs_errors,
-                "top_pmd_errors": top_pmd_errors
+                "top_pmd_errors": top_pmd_errors,
+                "report_file_path": report_file_path
             }
                 
             student_data.append(new_submission)
@@ -63,3 +65,25 @@ def update_json (
     except Exception as e:
         print(e, file=sys.stderr)
         print("Failed to update json", file=sys.stderr)
+        
+def store_temp_info(submission_data: SubmissionData, build_dir: Path | str) -> None:
+    build_dir_path = Path(build_dir)
+    json_path = build_dir_path / "temp_info.json"
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+        
+    try:
+                        
+        temp_info = {
+            "student_email": submission_data.email,
+            "report_file_path": str(submission_data.report_file_path)
+        }
+        
+        with open(json_path, 'w') as f:
+                            
+            json.dump(temp_info, f, indent=4)
+            print("JSON temp_info file updated successfully.", file=sys.stderr)
+     
+    except Exception as e:
+        print(e, file=sys.stderr)
+        print("Failed to update temp_info json", file=sys.stderr)
+        

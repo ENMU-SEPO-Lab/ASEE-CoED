@@ -2,7 +2,6 @@ TODO:
 
 - dynamic runtime and efficiency scores -> GenAI
 - add grade_report.txt path to records.json file for reference inside CI pipeline
-- adapt junit parsing logic to consume new .xml format
 - fetch recipient address for feedback email from records.json or script logic output file?
 
 
@@ -10,3 +9,8 @@ Future objectives:
 
 - API implementation
 - Exposure to web address
+
+Stehen geblieben bei:
+
+    wo nutze ich get_upload_dir_path
+    soll ich json im build dir erstellen um grade_report_path und student_email zu hinterlegen für pipeline 

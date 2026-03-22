@@ -798,5 +798,72 @@
                 "top_pmd_errors": []
             }
         ]
+    },
+    "upload_here": {
+        "ludwig.scherer@enmu.edu": [
+            {
+                "counter": 1,
+                "loc": 72,
+                "error density": 0.003472,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": [],
+                "report_file_path": "/home/ludwig/Code/ASEE-CoED/reports/grade_reports/2026-03-22_17-30-17.txt"
+            },
+            {
+                "counter": 2,
+                "loc": 72,
+                "error density": 0.003472,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": [],
+                "report_file_path": "/home/ludwig/Code/ASEE-CoED/reports/grade_reports/2026-03-22_17-38-23.txt"
+            },
+            {
+                "counter": 3,
+                "loc": 72,
+                "error density": 0.003472,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": [],
+                "report_file_path": "/home/ludwig/Code/ASEE-CoED/reports/grade_reports/2026-03-22_17-57-20.txt"
+            }
+        ]
     }
 }

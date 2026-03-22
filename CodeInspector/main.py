@@ -14,7 +14,8 @@ from app.paths import (
     WEIGHTED_DATA_CSV,
     CS_ERROR_DATA_CSV,
     PMD_ERROR_DATA_CSV,
-    get_upload_dir_path
+    BUILD_DIR,
+    get_upload_dir_path_yml
 )
 import app.transforming.helpers as transf_helper
 import app.transforming.validation as validator
@@ -48,21 +49,26 @@ def run_pipeline(
     """
     
     try:
-        upload_dir = get_upload_dir_path()
+        upload_dir_path = get_upload_dir_path_yml()
+        print(upload_dir_path, file=sys.stderr)
+        
     except ValueError as e:
         # TODO: abort pipeline
         raise
     
-    student_email = validator.extract_author_from_submission(upload_dir) # get student email
+    student_email = validator.extract_author_from_submission(upload_dir_path) # get student email
+    if student_email is None:
+        sys.exit()
+        
     grading_helper.ensure_json_file(RECORDS_JSON_FILE) # make sure records.json exists
     records = grading_helper.load_json(RECORDS_JSON_FILE)
     max_submission_num = grading_config.get("max_submissions_per_assignment")
     
     # check if maximum submissions for this assignment has been reached:
-    if records.get(upload_dir.name):
-        student_records = records.get(upload_dir.name).get(student_email)
+    if records.get(upload_dir_path.name):
+        student_records = records.get(upload_dir_path.name).get(student_email)
         if student_records:
-            num_submissions_made = len(records.get(upload_dir.name).get(student_email))
+            num_submissions_made = len(records.get(upload_dir_path.name).get(student_email))
             if num_submissions_made >= max_submission_num:
                 print(f"Student reached the maximum number of submissions ({max_submission_num}) for this assignment", file=sys.stderr) # stderr because stdout is reserved for the report_file_path printing
                 # abort pipeline
@@ -72,8 +78,8 @@ def run_pipeline(
     parsed = parser.parse_and_combine_test_files(checkstyle_xml, pmd_xml, junit_xml)
             
     check_date = transf_helper.check_date() # get current date and format it    
-    # loc = line_counter.count_loc_in_dir(upload_dir) # count the lines of code detected in the submission dir (ignores blank lines and comments)
-    loc = line_counter.count_lines_in_dir(upload_dir) # count the lines of code detected in the submission dir (ignores blank lines)
+    # loc = line_counter.count_loc_in_dir(upload_dir_path) # count the lines of code detected in the submission dir (ignores blank lines and comments)
+    loc = line_counter.count_lines_in_dir(upload_dir_path) # count the lines of code detected in the submission dir (ignores blank lines)
     
     # process the parsed data to prepare for score evaluation
     processed_submission = aggregator.process_submission_data(parsed)
@@ -89,7 +95,7 @@ def run_pipeline(
         processed_submission, 
         loc, 
         grading_config, 
-        upload_dir
+        upload_dir_path
     )
     
     submission_data.report_file_path = grade_report_file_path
@@ -100,16 +106,16 @@ def run_pipeline(
     if records:
         # relative to current semester submissions
         percentiles_self = percentile_scorer.compare_score_with_self(
-            student_email, weighted_error, upload_dir, records, grading_config
+            student_email, weighted_error, upload_dir_path, records, grading_config
         )
         
         percentiles_self_global = percentile_scorer.compare_score_with_self_global(
-            student_email, weighted_error, upload_dir, records, grading_config
+            student_email, weighted_error, upload_dir_path, records, grading_config
         )
         
         # relative to current semester submissions
         percentiles_class = percentile_scorer.compare_score_with_class(
-            weighted_error, upload_dir, records, grading_config
+            weighted_error, upload_dir_path, records, grading_config
         )
     
     grading_helper.check_for_weighted_data_csv(WEIGHTED_DATA_CSV)
@@ -165,6 +171,7 @@ if __name__ == "__main__":
     
     # update persistence files after pipeline finished
     recorder.update_json(submission_data, RECORDS_JSON_FILE)
+    recorder.store_temp_info(submission_data, BUILD_DIR)
     error_counter.update_csv_files(
         processed_submission, 
         CS_ERROR_DATA_CSV, 
