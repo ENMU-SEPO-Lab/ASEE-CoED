@@ -169,8 +169,6 @@ jobs:
         run: |
           if [ -f CodeInspector/main.py ] && [ -f $VENV_PATH/bin/activate ]; then
             source $VENV_PATH/bin/activate
-            FEEDBACK_PATH=$(python CodeInspector/main.py)
-            echo "feedback_path=$FEEDBACK_PATH" >> $GITHUB_OUTPUT
           else
             echo "CodeInspector/main.py or venv not found, skipping grading"
           fi
@@ -188,7 +186,6 @@ jobs:
         env:
           GMAIL_USER: alarusie@gmail.com
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          FEEDBACK_FILE_PATH: ${{ steps.grader.outputs.feedback_path}}
         run: |
           python <<'EOF'
           import os
@@ -200,7 +197,6 @@ jobs:
 
           gmail_user = os.environ['GMAIL_USER']
           gmail_pass = os.environ['GMAIL_APP_PASSWORD']
-          feedback_path = Path(os.environ['FEEDBACK_FILE_PATH'])
 
           json_path = Path(os.environ['TEMP_JSON'])
           with open(json_path, "r") as file:
