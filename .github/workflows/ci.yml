@@ -169,6 +169,7 @@ jobs:
         run: |
           if [ -f CodeInspector/main.py ] && [ -f $VENV_PATH/bin/activate ]; then
             source $VENV_PATH/bin/activate
+            python CodeInspector/main.py
           else
             echo "CodeInspector/main.py or venv not found, skipping grading"
           fi
