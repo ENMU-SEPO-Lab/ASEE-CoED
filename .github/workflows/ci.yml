@@ -196,12 +196,13 @@ jobs:
           import smtplib
           from email.message import EmailMessage
           from pathlib import Path
+          import json
 
           gmail_user = os.environ['GMAIL_USER']
           gmail_pass = os.environ['GMAIL_APP_PASSWORD']
           feedback_path = Path(os.environ['FEEDBACK_FILE_PATH'])
 
-          json_path = Path($TEMP_JSON)
+          json_path = Path(os.environ['TEMP_JSON'])
           with open(json_path, "r") as file:
               data = json.load(file)
 
