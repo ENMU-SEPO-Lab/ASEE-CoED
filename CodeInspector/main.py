@@ -50,7 +50,7 @@ def run_pipeline(
     
     try:
         upload_dir_path = get_upload_dir_path_yml()
-        print(upload_dir_path, file=sys.stderr)
+        print(f"The detected upload dir path is: {upload_dir_path}", file=sys.stderr)
         
     except ValueError as e:
         # TODO: abort pipeline
@@ -70,7 +70,7 @@ def run_pipeline(
         if student_records:
             num_submissions_made = len(records.get(upload_dir_path.name).get(student_email))
             if num_submissions_made >= max_submission_num:
-                print(f"Student reached the maximum number of submissions ({max_submission_num}) for this assignment", file=sys.stderr) # stderr because stdout is reserved for the report_file_path printing
+                print(f"Student reached the maximum number of submissions ({max_submission_num}) for this assignment", file=sys.stderr)
                 # abort pipeline
                 sys.exit()
         
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     with open(GRADING_CONFIG_FILE, "r") as file:
         grading_config = json.load(file)
                 
-    print("Test files read successfully", file=sys.stderr) # stderr because stdout is reserved for the report_file_path printing
+    print("Test files read successfully", file=sys.stderr)
     
     # run the pipeline
     submission_data, processed_submission = run_pipeline(
