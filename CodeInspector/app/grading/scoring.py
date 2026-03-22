@@ -181,18 +181,22 @@ def _calculate_requirements_score(
     
     # [60/60, 48/60, 36/60, 10/60] 
     possible_score_ratios = [round(score / max_score, 1) for score in possible_scores]
+    print(possible_score_ratios)
     test_success_ratio = 1
     
     # if unit tests were ran
     if number_of_tests > 0:
-        test_success_ratio = round((number_of_failed_tests / number_of_tests), 1)
-    # 5/11 = 0.4545
-    # 0.5
-    # TODO: Make sure this behaves as expected 02/28/2026
+        test_success_ratio = 1 - round((number_of_failed_tests / number_of_tests), 1)
+    # 1/12 = 0.08333
+    # test_success_ratio = 1 - 0.1 = 0.9  
+    
+    print(f"test_success_ratio: {test_success_ratio}")
     
     for score_ratio in possible_score_ratios:
         if test_success_ratio >= score_ratio:
             req_score = int(score_ratio * max_score)
+            print(f"chose score ratio: {score_ratio}")
+            break
     
     return req_score, number_of_tests, number_of_failed_tests
 

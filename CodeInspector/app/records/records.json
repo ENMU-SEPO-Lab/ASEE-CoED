@@ -863,6 +863,111 @@
                 ],
                 "top_pmd_errors": [],
                 "report_file_path": "/home/ludwig/Code/ASEE-CoED/reports/grade_reports/2026-03-22_17-57-20.txt"
+            },
+            {
+                "counter": 4,
+                "loc": 72,
+                "error density": 0.003472,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": [],
+                "report_file_path": "/home/ludwig/Code/ASEE-CoED/reports/grade_reports/2026-03-22_19-19-33.txt"
+            },
+            {
+                "counter": 5,
+                "loc": 72,
+                "error density": 0.003472,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": [],
+                "report_file_path": "/home/ludwig/Code/ASEE-CoED/reports/grade_reports/2026-03-22_19-20-36.txt"
+            },
+            {
+                "counter": 6,
+                "loc": 72,
+                "error density": 0.003472,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": [],
+                "report_file_path": "/home/ludwig/Code/ASEE-CoED/reports/grade_reports/2026-03-22_19-21-38.txt"
+            },
+            {
+                "counter": 7,
+                "loc": 72,
+                "error density": 0.003472,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": [],
+                "report_file_path": "/home/ludwig/Code/ASEE-CoED/reports/grade_reports/2026-03-22_19-22-17.txt"
+            },
+            {
+                "counter": 8,
+                "loc": 72,
+                "error density": 0.003472,
+                "top_cs_errors": [
+                    [
+                        "FinalParametersCheck",
+                        3
+                    ],
+                    [
+                        "NewlineAtEndOfFileCheck",
+                        1
+                    ],
+                    [
+                        "JavadocPackageCheck",
+                        1
+                    ]
+                ],
+                "top_pmd_errors": [],
+                "report_file_path": "/home/ludwig/Code/ASEE-CoED/reports/grade_reports/2026-03-22_19-22-55.txt"
             }
         ]
     }
