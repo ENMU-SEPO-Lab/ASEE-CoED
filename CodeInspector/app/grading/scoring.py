@@ -185,7 +185,7 @@ def _calculate_requirements_score(
     
     # if unit tests were ran
     if number_of_tests > 0:
-        test_success_ratio = 1 - round((number_of_failed_tests / number_of_tests), 1)
+        test_success_ratio = round((number_of_failed_tests / number_of_tests), 1)
     # 5/11 = 0.4545
     # 0.5
     # TODO: Make sure this behaves as expected 02/28/2026
