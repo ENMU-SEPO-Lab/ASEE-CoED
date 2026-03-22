@@ -207,7 +207,7 @@ jobs:
               data = json.load(file)
 
               student_email = data.get("student_email", "essa.imhmed@enmu.edu")
-              feedback_path = data.get("report_file_path")
+              feedback_path = Path(data.get("report_file_path"))
 
           msg = EmailMessage()
           msg['Subject'] = 'Automated Grading Feedback'
