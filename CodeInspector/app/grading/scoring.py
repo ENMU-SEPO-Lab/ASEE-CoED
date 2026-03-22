@@ -5,6 +5,7 @@ from app.infrastructure.models import(
     SubmissionData,
 )
 from pathlib import Path
+import sys
 
 def evaluate_submission(
     check_date: str,
@@ -181,7 +182,7 @@ def _calculate_requirements_score(
     
     # [60/60, 48/60, 36/60, 10/60] 
     possible_score_ratios = [round(score / max_score, 1) for score in possible_scores]
-    print(possible_score_ratios)
+    print(possible_score_ratios, file=sys.stderr)
     test_success_ratio = 1
     
     # if unit tests were ran
@@ -190,7 +191,7 @@ def _calculate_requirements_score(
     # 1/12 = 0.08333
     # test_success_ratio = 1 - 0.1 = 0.9  
     
-    print(f"test_success_ratio: {test_success_ratio}")
+    print(f"test_success_ratio: {test_success_ratio}", file=sys.stderr)
     
     for score_ratio in possible_score_ratios:
         if test_success_ratio >= score_ratio:
