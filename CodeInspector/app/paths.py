@@ -13,6 +13,7 @@ GRADE_REPORTS_DIR = ROOT / "reports/grade_reports"
 RECORDS_DIR = CODE_INSPECTOR / "app/records"
 BUILD_DIR = ROOT / "build"
 
+TEMP_JSON_FILE = BUILD_DIR / "temp_info.json"
 CS_XML_FILE = XML_REPORT_DIR / "checkstyle.xml"
 PMD_XML_FILE = XML_REPORT_DIR / "pmd.xml"
 JUNIT_RESULT_FILE = XML_REPORT_DIR / "TEST-junit-vintage.xml"

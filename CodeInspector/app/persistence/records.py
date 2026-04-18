@@ -66,9 +66,8 @@ def update_json (
         print(e, file=sys.stderr)
         print("Failed to update json", file=sys.stderr)
         
-def store_temp_info(submission_data: SubmissionData, build_dir: Path | str) -> None:
-    build_dir_path = Path(build_dir)
-    json_path = build_dir_path / "temp_info.json"
+def store_temp_info(submission_data: SubmissionData, json_path: Path | str) -> None:
+    json_path = Path(json_path)
     json_path.parent.mkdir(parents=True, exist_ok=True)
         
     try:
