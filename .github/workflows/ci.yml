@@ -177,7 +177,12 @@ jobs:
       # Efficiency score by LLM
       - name: Send code to LLM
         run: |
-          
+          if [ -f CodeInspector/app/grading/gen_ai.py ] && [ -f $VENV_PATH/bin/activate ]; then
+            source $VENV_PATH/bin/activate
+            python -m CodeInspector.app.grading.gen_ai
+          else
+            echo "CodeInspector.app.grading.gen_ai module or venv not found, skipping gen ai enhancement"
+          fi
 
       # Upload reports
       - name: Upload grading feedback
@@ -209,7 +214,7 @@ jobs:
               data = json.load(file)
 
               student_email = data.get("student_email", "essa.imhmed@enmu.edu")
-              feedback_path = Path(data.get("report_file_path"))
+              feedback_path = Path(data.get("enhanced_report_path"))
 
           msg = EmailMessage()
           msg['Subject'] = 'Automated Grading Feedback'

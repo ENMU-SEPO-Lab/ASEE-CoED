@@ -67,7 +67,7 @@ def evaluate_submission(
     run_score = run_dict.get("excellent", 20)
     eff_score = eff_dict.get("excellent", 10)
     
-    overall_score = coding_std_score + req_score + run_score + eff_score
+    overall_score = coding_std_score + req_score + run_score # efficiency score will be added by LLM later
     overall_weighted_error = cs_weighted_error + pmd_weighted_error
     
     cs_violation_count = cs_processed.get_error_count_within_submission()

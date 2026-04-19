@@ -294,7 +294,7 @@ def generate_score_output(
     max_score_run = criteria_ratings_dict.get("runtime").get("excellent")
     max_score_eff = criteria_ratings_dict.get("efficiency").get("excellent")
     
-    overall_score = requirements_score + coding_stand_score + runtime_score + efficiency_score
+    overall_score = requirements_score + coding_stand_score + runtime_score # efficiency score needs to be added by LLM later on
     max_score_overall = max_score_req + max_score_code_std + max_score_eff + max_score_run
     
     # Compute final score with the individual rubric scores and generate score output lines
@@ -303,9 +303,9 @@ def generate_score_output(
             f"\n    - Requirements: {requirements_score} (out of {max_score_req})",
             f"\n    - Coding Standards: {coding_stand_score} (out of {max_score_code_std})",
             f"\n    - Runtime: {runtime_score} (out of {max_score_run})", # need dynamically -> GenAI
-            f"\n    - Efficiency: {efficiency_score} (out of {max_score_eff})", # need dynamically -> GenAI
+            f"\n    - Efficiency: <FILL IN EFFICIENCY SCORE HERE> (out of {max_score_eff})", # need dynamically -> GenAI
             f"\n{'=' * 100}",
-            f"\n    - Overall: {overall_score} (out of {max_score_overall})",
+            f"\n    - Overall: {overall_score} <REPLACE THIS INTEGER WITH THE SUM OF IT AND THE EFFICIENCY SCORE> (out of {max_score_overall})",
             f"\n{'=' * 45} END REPORT {'=' * 45}"
         ]
     return student_score_output

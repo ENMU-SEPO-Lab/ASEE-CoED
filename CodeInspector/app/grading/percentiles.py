@@ -42,8 +42,10 @@ def compare_score_with_self_global(
     records: dict,
     grading_config: dict
 ) -> tuple[float, float, float, float, float, int]:
+    
     assignment_dir = upload_dir.name
     precision_ed = grading_config.get("system_decimal_precision", {}).get("error_density", 4)
+    precision_perc = grading_config.get("system_decimal_precision", {}).get("percentile_score", 2)
     
     if records is None:
         print("No records for assignments available", file=sys.stderr)
@@ -77,9 +79,9 @@ def compare_score_with_self_global(
     average_error_density = round(sum(error_density_list) / len(error_density_list), precision_ed)
     # relative change compared to the final submission of the previous assignment
     density_of_first_submission = round(error_density_list[0], precision_ed)
-    relative_change_to_first = abs((1 - round(error_density / density_of_first_submission, precision_ed)) * 100)
+    relative_change_to_first = round(abs((1 - round(error_density / density_of_first_submission, precision_ed)) * 100), precision_perc)
     density_of_last_submission = round(error_density_list[(len(error_density_list) - 1)], precision_ed)
-    relative_change_to_last = abs((1 - round(error_density / density_of_last_submission, precision_ed)) * 100)
+    relative_change_to_last = round(abs((1 - round(error_density / density_of_last_submission, precision_ed)) * 100), precision_perc)
     assignment_number = len(error_density_list)
     
     return  (
@@ -116,6 +118,7 @@ def compare_score_with_self(
     assignment_dir = upload_dir.name
     assignment_data = records.get(assignment_dir, {})
     precision_ed = grading_config.get("system_decimal_precision", {}).get("error_density", 4)
+    precision_perc = grading_config.get("system_decimal_precision", {}).get("percentile_score", 2)
 
     if not assignment_data:
         print(f"There are no records for {assignment_dir}", file=sys.stderr)
@@ -136,9 +139,9 @@ def compare_score_with_self(
     average_error_density = round(sum(error_density_list) / len(error_density_list), precision_ed)
     # relative change compared to the last submission
     density_of_first_submission = round(error_density_list[0], precision_ed)
-    relative_change_to_first = abs((1 - round(error_density / density_of_first_submission, precision_ed)) * 100)
+    relative_change_to_first = round(abs((1 - round(error_density / density_of_first_submission, precision_ed)) * 100), precision_perc)
     density_of_last_submission = round(error_density_list[(len(error_density_list) - 1)], precision_ed)
-    relative_change_to_last = abs((1 - round(error_density / density_of_last_submission, precision_ed)) * 100)
+    relative_change_to_last = round(abs((1 - round(error_density / density_of_last_submission, precision_ed)) * 100), precision_perc)
     submission_number = student_data[len(student_data) - 1].get("counter") + 1 # get the number of the last submission and increment it
     print(f"Submission number: {submission_number}", file=sys.stderr)
     return  (
@@ -165,9 +168,11 @@ def compare_score_with_class(
     Returns:
         tuple[float, float, str]: [average_assignment_error, score_relative_to_class, comparator]
     """
+    
     assignment_dir = upload_dir.name
     assignment_data = records.get(assignment_dir, {})
     precision_ed = grading_config.get("system_decimal_precision", {}).get("error_density", 4)
+    precision_perc = grading_config.get("system_decimal_precision", {}).get("percentile_score", 2)
     
     if not assignment_data: # if no records under this directory name
         print(f"There are no records for {assignment_dir}", file=sys.stderr)
@@ -195,7 +200,7 @@ def compare_score_with_class(
     # calculate average error of all final submissions by students for this assignment
     average_assignment_error = round(sum(error_density_list) / len(error_density_list), precision_ed) 
     # compare the score of the current submission to the overall average
-    score_relative_to_class = round(error_density / average_assignment_error, precision_ed)
+    score_relative_to_class = error_density / average_assignment_error
     
     # change output variables based on whether the error density is higher or lower
     if score_relative_to_class < 1:
@@ -204,6 +209,8 @@ def compare_score_with_class(
     else:
         percent_value = (score_relative_to_class - 1) * 100
         comparator = "higher"
+        
+    percent_value = round(percent_value, precision_perc)
     
     return average_assignment_error, percent_value, comparator
     
