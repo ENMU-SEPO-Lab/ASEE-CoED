@@ -74,7 +74,7 @@ def store_temp_info(submission_data: SubmissionData, json_path: Path | str) -> N
                         
         temp_info = {
             "student_email": submission_data.email,
-            "report_file_path": str(submission_data.report_file_path)
+            "report_filename": str(submission_data.report_file_path.name)
         }
         
         with open(json_path, 'w') as f:

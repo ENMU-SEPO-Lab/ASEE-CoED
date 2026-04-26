@@ -86,9 +86,8 @@ IMPORTANT RULES
 - The enhanced_report must read naturally as a grading report (not as bullet points)
 - The enhanced_report may not contain more than 140 characters per line
 """
-
     
-def read_all_code_files(upload_dir_path: Path):
+def read_all_code_files(upload_dir_path: Path) -> str:
     
     complete_code = (
         "This is the student submission.\n"
@@ -108,19 +107,19 @@ def read_all_code_files(upload_dir_path: Path):
     
     return complete_code
 
-def get_preliminary_report():
+def get_preliminary_report() -> tuple[Path, str]:
     
     with open(paths.TEMP_JSON_FILE, "r") as file:
         data = json.load(file)
 
-        report_file_path = Path(data.get("report_file_path"))
+        report_file_path =  paths.GRADE_REPORTS_DIR / data.get("report_filename")
         
     with report_file_path.open("r", encoding="utf-8") as f:
         report = f.read()
         
     return (report_file_path, report)
 
-def request_full_evaluation(code: str, report: str):
+def request_full_evaluation(code: str, report: str) -> str:
     
     user_prompt = f"""
         PRELIMINARY REPORT:
@@ -151,7 +150,7 @@ def parse_llm_response(response: str):
         print("Invalid JSON from LLM:", response)
         return None
 
-def store_report(report: str, old_path: Path | str):
+def store_report(report: str, old_path: Path | str) -> Path:
     
     old_path = Path(old_path)
     new_path = old_path.with_name(old_path.stem + "_ai_enhanced" + old_path.suffix)
@@ -162,12 +161,12 @@ def store_report(report: str, old_path: Path | str):
     print(f"Grade report created and saved to: {new_path}", file=sys.stderr)
     return new_path
     
-def append_temp_info(json_path: Path | str, enhanced_report_path: Path | str) -> None:
+def append_temp_info(json_path: Path | str, enhanced_report_path: Path):
     json_path = Path(json_path)
     
     with open(json_path, 'r+') as f:
         temp_info = json.load(f)
-        temp_info["enhanced_report_path"] = str(enhanced_report_path)
+        temp_info["enhanced_report_filename"] = str(enhanced_report_path.name)
         
         f.seek(0)
         json.dump(temp_info, f, indent=4)
@@ -197,34 +196,3 @@ if __name__ == "__main__":
 
     enhanced_report_path = store_report(enhanced_report, prelim_report_path)
     append_temp_info(paths.TEMP_JSON_FILE, enhanced_report_path)   
-        
-# def request_efficiency_eval(code: str, report: str):
-    
-#     prompt_filled = prompt.format(code=code, report=report)
-    
-#     response = chat(
-#         model='gemini-3-flash-preview',
-#         messages=[
-#             {
-#                 'role': 'system', 
-#                 'content': prompt_filled
-#             }
-#         ],
-#     )
-    
-#     return response.message.content    
-
-# def enhance_grade_report(report: str, eff_eval: str):
-    
-#     response = chat(
-#         model='gemini-3-flash-preview',
-#         messages=[
-#             {'role': 'system', 'content': enhanced_report},
-#             {
-#                 'role': 'user', 
-#                 'content': f'The preliminary report: {report}. And the efficiency evaluation: {eff_eval}'
-#             }
-#         ],
-#     )
-    
-#     return response.message.content
