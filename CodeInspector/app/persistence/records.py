@@ -66,16 +66,15 @@ def update_json (
         print(e, file=sys.stderr)
         print("Failed to update json", file=sys.stderr)
         
-def store_temp_info(submission_data: SubmissionData, build_dir: Path | str) -> None:
-    build_dir_path = Path(build_dir)
-    json_path = build_dir_path / "temp_info.json"
+def store_temp_info(submission_data: SubmissionData, json_path: Path | str) -> None:
+    json_path = Path(json_path)
     json_path.parent.mkdir(parents=True, exist_ok=True)
         
     try:
                         
         temp_info = {
             "student_email": submission_data.email,
-            "report_file_path": str(submission_data.report_file_path)
+            "report_filename": str(submission_data.report_file_path.name)
         }
         
         with open(json_path, 'w') as f:

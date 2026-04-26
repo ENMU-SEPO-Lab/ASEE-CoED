@@ -7,11 +7,7 @@ on:
       - 'upload_here/**'
   workflow_dispatch:
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    env:
+env:
       PYTHON_V: '3.11'
       VENV_PATH: '.venv'
       BUILD_DIR: 'build'
@@ -23,6 +19,10 @@ jobs:
       GRADE_REPORT_DIR: 'reports/grade_reports'
       ASSIGNMENT_DIR: 'upload_here'
       UNIT_TEST_DIR: 'test'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
     steps:
       # Checkout repository
@@ -181,6 +181,92 @@ jobs:
           name: grading-feedback
           path: ${{ env.GRADE_REPORT_DIR }}
 
+      # Upload temp json
+      - name: Upload temp data
+        uses: actions/upload-artifact@v4
+        with:
+          name: temp-data
+          path: ${{ env.TEMP_JSON }}
+
+  gen_ai_report:
+    runs-on: self-hosted
+    needs: build
+
+    steps:
+
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Retrieve preliminary grade report
+      - name: Download grade reports
+        uses: actions/download-artifact@v4
+        with:
+          name: grading-feedback
+          path: ${{ env.GRADE_REPORT_DIR }}
+
+      # Retrieve temp json file
+      - name: Download temp data
+        uses: actions/download-artifact@v4
+        with:
+          name: temp-data
+          path: ${{ env.BUILD_DIR }}
+
+      # Debugging
+      - name: Check ollama
+        run: which ollama && ollama --version
+
+      # Efficiency scoring by LLM
+      - name: Send code to LLM
+        run: |
+          if [ -f CodeInspector/app/grading/gen_ai.py ]; then
+            ~/actions-runner/runner-venv/bin/python3 -m CodeInspector.app.grading.gen_ai
+          else
+            echo "CodeInspector.app.grading.gen_ai module not found, skipping gen ai enhancement"
+          fi
+
+      # Upload reports
+      - name: Upload grading feedback
+        uses: actions/upload-artifact@v4
+        with:
+          name: grading-feedback
+          path: ${{ env.GRADE_REPORT_DIR }}
+          overwrite: true
+
+      # Upload temp json
+      - name: Upload temp data
+        uses: actions/upload-artifact@v4
+        with:
+          name: temp-data
+          path: ${{ env.TEMP_JSON }}
+          overwrite: true
+
+  send_feedback:
+    runs-on: ubuntu-latest
+    needs: gen_ai_report
+
+    steps: 
+
+      # Setup Python 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_V }}
+
+      # Retrieve grade reports
+      - name: Download grade reports
+        uses: actions/download-artifact@v4
+        with:
+          name: grading-feedback
+          path: ${{ env.GRADE_REPORT_DIR }}
+
+      # Retrieve temp json file
+      - name: Download temp data
+        uses: actions/download-artifact@v4
+        with:
+          name: temp-data
+          path: ${{ env.BUILD_DIR }}
+
       # Send feedback email
       - name: Send Feedback Email
         if: always()
@@ -198,13 +284,14 @@ jobs:
 
           gmail_user = os.environ['GMAIL_USER']
           gmail_pass = os.environ['GMAIL_APP_PASSWORD']
+          grade_report_dir = os.environ['GRADE_REPORT_DIR']
 
           json_path = Path(os.environ['TEMP_JSON'])
           with open(json_path, "r") as file:
               data = json.load(file)
 
               student_email = data.get("student_email", "essa.imhmed@enmu.edu")
-              feedback_path = Path(data.get("report_file_path"))
+              feedback_path = Path(grade_report_dir) / data.get("enhanced_report_filename")
 
           msg = EmailMessage()
           msg['Subject'] = 'Automated Grading Feedback'

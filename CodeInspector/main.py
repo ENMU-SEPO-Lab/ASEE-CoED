@@ -15,6 +15,7 @@ from app.paths import (
     CS_ERROR_DATA_CSV,
     PMD_ERROR_DATA_CSV,
     BUILD_DIR,
+    TEMP_JSON_FILE,
     get_upload_dir_path_yml
 )
 import app.transforming.helpers as transf_helper
@@ -171,7 +172,7 @@ if __name__ == "__main__":
     
     # update persistence files after pipeline finished
     recorder.update_json(submission_data, RECORDS_JSON_FILE)
-    recorder.store_temp_info(submission_data, BUILD_DIR)
+    recorder.store_temp_info(submission_data, TEMP_JSON_FILE)
     error_counter.update_csv_files(
         processed_submission, 
         CS_ERROR_DATA_CSV, 
