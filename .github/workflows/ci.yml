@@ -267,7 +267,7 @@ jobs:
       - name: Send Feedback Email
         if: always()
         env:
-          GMAIL_USER: leomessi@gmail.com
+          GMAIL_USER: alarusie@gmail.com
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: |
           python <<'EOF'
@@ -286,14 +286,14 @@ jobs:
           with open(json_path, "r") as file:
               data = json.load(file)
 
-              student_email = data.get("student_email", "leo.messi@enmu.edu")
+              student_email = data.get("student_email", "essa.imhmed@enmu.edu")
               feedback_path = Path(grade_report_dir) / data.get("enhanced_report_filename")
 
           msg = EmailMessage()
           msg['Subject'] = 'Automated Grading Feedback'
           msg['From'] = gmail_user
           msg['To'] = student_email
-          msg.set_content("Hello,\n\nYour automated grading feedback is attached.\n\nRegards,\nDr. Messi")
+          msg.set_content("Hello,\n\nYour automated grading feedback is attached.\n\nRegards,\nDr. Imhmed")
 
           if feedback_path.exists():
               with open(feedback_path,'rb') as f:
