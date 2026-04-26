@@ -220,7 +220,7 @@ jobs:
       - name: Send code to LLM
         run: |
           if [ -f CodeInspector/app/grading/gen_ai.py ]; then
-            ~/runner-venv/bin/python3 -m CodeInspector.app.grading.gen_ai
+            ~/actions-runner/runner-venv/bin/python3 -m CodeInspector.app.grading.gen_ai
           else
             echo "CodeInspector.app.grading.gen_ai module not found, skipping gen ai enhancement"
           fi
