@@ -212,6 +212,10 @@ jobs:
           name: temp-data
           path: ${{ env.BUILD_DIR }}
 
+      # Debugging
+      - name: Check ollama
+        run: which ollama && ollama --version
+
       # Efficiency scoring by LLM
       - name: Send code to LLM
         run: |
