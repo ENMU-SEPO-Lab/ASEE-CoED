@@ -4,6 +4,8 @@ from ollama import chat
 import json
 import sys
 
+llm_model = 'phi3'
+
 system_prompt = """
 You are a teaching assistant grading introductory college (CS1-level) Java programming assignments.
 
@@ -134,7 +136,7 @@ def request_full_evaluation(code: str, report: str) -> str:
     """
         
     response = chat(
-        model='gemini-3-flash-preview',
+        model=llm_model,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
