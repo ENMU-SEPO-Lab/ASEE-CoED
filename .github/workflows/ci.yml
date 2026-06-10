@@ -191,6 +191,8 @@ jobs:
   gen_ai_report:
     runs-on: self-hosted
     needs: build
+    env:
+        HOME: /home/colab
 
     steps:
 
