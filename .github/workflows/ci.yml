@@ -218,6 +218,10 @@ jobs:
       - name: Check ollama
         run: which ollama && ollama --version
 
+      # Ensure the desired model is available
+      - name: Ensure model is available
+        run: ollama pull phi3
+
       # Efficiency scoring by LLM
       - name: Send code to LLM
         run: |
