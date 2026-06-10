@@ -192,7 +192,7 @@ jobs:
     runs-on: self-hosted
     needs: build
     env:
-        HOME: /home/colab
+        HOME: /home/colab/workspace
 
     steps:
 
