@@ -140,7 +140,8 @@ def request_full_evaluation(code: str, report: str) -> str:
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ],
-        format="json"
+        format="json",
+        options={"num_ctx": 16384, "temperature": 0},
     )
     
     return response.message.content
