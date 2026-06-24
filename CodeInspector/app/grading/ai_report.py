@@ -139,8 +139,9 @@ def request_full_evaluation(code: str, report: str) -> str:
 def parse_llm_response(response: str):
     try:
         return json.loads(response, strict=False)
-    except json.JSONDecodeError:
-        print("Invalid JSON from LLM:", response)
+    except json.JSONDecodeError as e:
+        print(f"JSON error: {e}", file=sys.stderr)    
+        print(f"--- raw response ---\n{response}\n--- end ---", file=sys.stderr)
         return None
 
 def store_report(report: str, old_path: Path | str) -> Path:
