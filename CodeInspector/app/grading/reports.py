@@ -84,13 +84,13 @@ def create_grade_report(
         cs_lines.append(
             f"\nOverall weighted CheckStyle error density: {round(cs_weighted_density, precision_ed)}"
             f"\nThis ranks in the {checkstyle_percentile}th percentile of submissions in the dataset."
-            f"\nThat is, {100 - checkstyle_percentile}% of submissions had a higher CheckStyle error density than this.\n"
+            f"\nThat is, {round((100 - checkstyle_percentile), precision_perc_val)}% of submissions had a higher CheckStyle error density than this.\n"
         )
         # add pmd stats to pmd lines
         pmd_lines.append(
             f"\n\nOverall weighted PMD error density: {round(pmd_weighted_density, precision_ed)}"
             f"\nThis ranks in the {pmd_percentile}th percentile of submissions in the dataset."
-            f"\nThat is, {100 - pmd_percentile}% of submissions had a higher PMD error density than this. "
+            f"\nThat is, {round((100 - pmd_percentile), precision_perc_val)}% of submissions had a higher PMD error density than this. "
         )
     
     # if record data could not be loaded / is None    

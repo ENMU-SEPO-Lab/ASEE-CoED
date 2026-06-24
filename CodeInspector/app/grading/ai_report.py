@@ -196,5 +196,6 @@ if __name__ == "__main__":
         print("Missing enhanced_report in LLM response", file=sys.stderr)
         enhanced_report = prelim_report
 
+    print(f"The enhanced report:\n\n{enhanced_report}")
     enhanced_report_path = store_report(enhanced_report, prelim_report_path)
     append_temp_info(paths.TEMP_JSON_FILE, enhanced_report_path)   
