@@ -22,7 +22,7 @@ public class CardDescription {
     }
 
     /**
-     * Checks if the input is a valid suit.
+     * Checks if the input is a valid suit
      */
     public static boolean isValidSuit(String suit) {
         for (String s : VALID_SUITS) {
