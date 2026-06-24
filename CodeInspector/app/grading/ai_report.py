@@ -57,8 +57,8 @@ OUTPUT FORMAT (STRICT JSON)
 Format of the JSON:
 
 {
-  "efficiency_score": <integer from 0 to 10>,
-  "enhanced_report": "<finished_enhanced_report>"
+  "efficiency_score": <integer>s,
+  "enhanced_report": "<string>"
 }
 
 ----------------------------------------
@@ -73,6 +73,7 @@ SCORING GUIDE
 ----------------------------------------
 IMPORTANT RULES
 ----------------------------------------
+- Output MUST be VALID JSON
 - Be fair and consistent
 - Do NOT invent problems if the code is simple and correct
 - Keep feedback concise and helpful for a beginner
