@@ -2,7 +2,7 @@ import java.util.Scanner;
 
 /**
  * @author ludwig.scherer@enmu.edu
- * This program converts shorthand card notation into full card descriptions.
+ * This program converts shorthand card notation into full card descriptions
  */
 public class CardDescription {
 
@@ -32,7 +32,7 @@ public class CardDescription {
     }
 
     /**
-     * Converts shorthand rank and suit into a full card description
+     * Converts shorthand rank and suit into a full card description.
      * @param rank The shorthand rank (A, 2-10, J, Q, K)
      * @param suit The shorthand suit (D, H, S, C)
      * @return The full description of the card or an error message
@@ -67,7 +67,7 @@ public class CardDescription {
     }
 
     /**
-     * Main method that gets user input and prints the full card description.
+     * Main method that gets user input and prints the full card description
      */
     public static void main(String[] args) {
         try (Scanner scanner = new Scanner(System.in)) {
