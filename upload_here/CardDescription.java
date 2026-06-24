@@ -22,7 +22,7 @@ public class CardDescription {
     }
 
     /**
-     * Checks if the input is a valid suit
+     * Checks if the input is a valid suit.
      */
     public static boolean isValidSuit(String suit) {
         for (String s : VALID_SUITS) {
@@ -32,7 +32,7 @@ public class CardDescription {
     }
 
     /**
-     * Converts shorthand rank and suit into a full card description.
+     * Converts shorthand rank and suit into a full card description
      * @param rank The shorthand rank (A, 2-10, J, Q, K)
      * @param suit The shorthand suit (D, H, S, C)
      * @return The full description of the card or an error message
