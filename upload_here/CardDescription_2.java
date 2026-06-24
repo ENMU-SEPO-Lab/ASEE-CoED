@@ -4,7 +4,7 @@ import java.util.Scanner;
  * @author ludwig.scherer@enmu.edu
  * This program converts shorthand card notation into full card descriptions.
  */
-public class CardDescription_1 {
+public class CardDescription_2 {
 
     // Valid ranks and suits
     private static final String[] VALID_RANKS = 
