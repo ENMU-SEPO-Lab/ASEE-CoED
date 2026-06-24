@@ -1,13 +1,21 @@
 name: Java AutoGrader CI
 
-# Trigger only when push affects 'upload_here/' or manually
+# Trigger only when push affects the assignment dir, or manually
 on:
   push:
     paths:
       - 'upload_here/**'
   workflow_dispatch:
 
+# To avoid github actions run collisions
+concurrency:
+  group: autograder-serial
+  queue: max
+
 env:
+      OLLAMA_MODEL: 'qwen2.5-coder:7b'  
+      ASSIGNMENT_DIR: 'upload_here'
+
       PYTHON_V: '3.11'
       VENV_PATH: '.venv'
       BUILD_DIR: 'build'
@@ -17,7 +25,6 @@ env:
       TEST_CLASSES_DIR: 'build/classes/tests'
       TEST_REPORT_DIR: 'reports/test_reports'
       GRADE_REPORT_DIR: 'reports/grade_reports'
-      ASSIGNMENT_DIR: 'upload_here'
       UNIT_TEST_DIR: 'test'
 
 jobs:
@@ -193,6 +200,7 @@ jobs:
     needs: build
     env:
         HOME: /home/colab/workspace
+        SERVER_REPORT_DIR: /home/colab/workspace/grade_reports
 
     steps:
 
@@ -220,16 +228,23 @@ jobs:
 
       # Ensure the desired model is available
       - name: Ensure model is available
-        run: ollama pull phi3
+        run: ollama pull ${{ env.OLLAMA_MODEL }}
 
       # Efficiency scoring by LLM
       - name: Send code to LLM
         run: |
-          if [ -f CodeInspector/app/grading/gen_ai.py ]; then
-            ~/actions-runner/runner-venv/bin/python3 -m CodeInspector.app.grading.gen_ai
+          echo "Using model: ${{env.OLLAMA_MODEL}}"
+          if [ -f CodeInspector/app/grading/ai_report.py ]; then
+            ~/actions-runner/runner-venv/bin/python3 -m CodeInspector.app.grading.ai_report
           else
-            echo "CodeInspector.app.grading.gen_ai module not found, skipping gen ai enhancement"
+            echo "module not found, skipping gen ai enhancement"
           fi
+        
+      - name: Store Report
+        run: |
+          REPORT_ARCHIVE="${SERVER_REPORT_DIR}/${ASSIGNMENT_DIR}/${OLLAMA_MODEL}"
+          mkdir -p "$REPORT_ARCHIVE"
+          cp -r "$GRADE_REPORT_DIR"/. "$REPORT_ARCHIVE"/
 
       # Upload reports
       - name: Upload grading feedback
@@ -316,3 +331,4 @@ jobs:
 
           print("Email sent.")
           EOF
+          

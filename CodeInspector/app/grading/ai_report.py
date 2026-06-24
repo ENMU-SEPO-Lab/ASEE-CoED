@@ -3,8 +3,9 @@ from pathlib import Path
 from ollama import chat
 import json
 import sys
+import os
 
-llm_model = 'phi3'
+llm_model = os.environ["OLLAMA_MODEL"]
 
 system_prompt = """
 You are a teaching assistant grading introductory college (CS1-level) Java programming assignments.
