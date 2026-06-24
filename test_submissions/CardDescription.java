@@ -6,7 +6,7 @@ import java.util.Scanner;
  */
 public class CardDescription {
 
-    // Valid ranks and suits..
+    // Valid ranks and suits
     private static final String[] VALID_RANKS = 
         {"A","2","3","4","5","6","7","8","9","10","J","Q","K"};
     private static final String[] VALID_SUITS = {"D","H","S","C"};
@@ -82,4 +82,3 @@ public class CardDescription {
         }
     }
 }
-

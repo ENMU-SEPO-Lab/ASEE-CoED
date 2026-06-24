@@ -2,11 +2,11 @@ import java.util.Scanner;
 
 /**
  * @author ludwig.scherer@enmu.edu
- * This program converts shorthand card notation into full card descriptions
+ * This program converts shorthand card notation into full card descriptions.
  */
 public class CardDescription {
 
-    // Valid ranks and suits..
+    // Valid ranks and suits
     private static final String[] VALID_RANKS = 
         {"A","2","3","4","5","6","7","8","9","10","J","Q","K"};
     private static final String[] VALID_SUITS = {"D","H","S","C"};
@@ -67,7 +67,7 @@ public class CardDescription {
     }
 
     /**
-     * Main method that gets user input and prints the full card description
+     * Main method that gets user input and prints the full card description.
      */
     public static void main(String[] args) {
         try (Scanner scanner = new Scanner(System.in)) {
@@ -82,4 +82,3 @@ public class CardDescription {
         }
     }
 }
-

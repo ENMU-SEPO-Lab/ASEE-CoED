@@ -310,7 +310,7 @@ jobs:
           json_path = Path(os.environ['TEMP_JSON'])
           with open(json_path, "r") as file:
               data = json.load(file)
-
+              print("temp_info contents:", data)
               student_email = data.get("student_email", "essa.imhmed@enmu.edu")
               feedback_path = Path(grade_report_dir) / data.get("enhanced_report_filename")
 
