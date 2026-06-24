@@ -54,10 +54,8 @@ You must:
 OUTPUT FORMAT (STRICT JSON)
 ----------------------------------------
 
-Format of the JSON:
-
 {
-  "efficiency_score": <integer>s,
+  "efficiency_score": <integer>,
   "enhanced_report": "<string>"
 }
 
@@ -77,7 +75,6 @@ IMPORTANT RULES
 - Be fair and consistent
 - Do NOT invent problems if the code is simple and correct
 - Keep feedback concise and helpful for a beginner
-- Personalize the feedback to the student
 - The enhanced_report must read naturally as a grading report (not as bullet points)
 """
     
@@ -134,7 +131,7 @@ def request_full_evaluation(code: str, report: str) -> str:
             {"role": "user", "content": user_prompt}
         ],
         format="json",
-        options={"num_ctx": 16384, "temperature": 0},
+        options={"num_ctx": 32768, "temperature": 0},
     )
     
     return response.message.content
