@@ -142,6 +142,7 @@ def request_full_evaluation(code: str, report: str) -> str:
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ],
+        format="json"
     )
     
     return response.message.content
