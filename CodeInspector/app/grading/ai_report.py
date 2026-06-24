@@ -45,7 +45,6 @@ You will receive:
 
 You must:
 - Assign an efficiency score (0–10)
-- Identify key strengths and issues
 - Write the final feedback report by integrating efficiency feedback naturally 
 - Do not omit any valuable information provided in the preliminary report (such as most frequent errors, etc)
 - Elaborate on the most frequent error of each category for each tool (PMD and CheckStyle) giving examples of what the cause is and how to correct it
@@ -54,12 +53,6 @@ You must:
 ----------------------------------------
 OUTPUT FORMAT (STRICT JSON)
 ----------------------------------------
-You MUST return strictly valid JSON.
-- Do not include explanations
-- Do not include markdown
-- Do not include code fences
-- Do not include any text outside the JSON object
-- The response must be directly parsable with json.loads()
 
 Format of the JSON:
 
@@ -85,7 +78,6 @@ IMPORTANT RULES
 - Keep feedback concise and helpful for a beginner
 - Personalize the feedback to the student
 - The enhanced_report must read naturally as a grading report (not as bullet points)
-- The enhanced_report may not contain more than 140 characters per line
 """
     
 def read_all_code_files(upload_dir_path: Path) -> str:
